@@ -1,0 +1,264 @@
+#!/bin/bash
+
+version="0.1"
+# Argbash is a bash code generator used to get arguments parsing right.
+# Argbash is FREE SOFTWARE, see https://argbash.io for more info
+# Generated online by https://argbash.io/generate
+
+die() {
+	local _ret=$2
+	test -n "$_ret" || _ret=1
+	test "$_PRINT_HELP" = yes && print_help >&2
+	echo "$1" >&2
+	exit ${_ret}
+}
+
+begins_with_short_option() {
+    local first_option all_short_options
+	all_short_options='fjh'
+	first_option="${1:0:1}"
+	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+}
+
+# THE DEFAULTS INITIALIZATION - POSITIONALS
+_positionals=()
+# THE DEFAULTS INITIALIZATION - OPTIONALS
+_arg_import_path=
+_arg_jira="-"
+_arg_dry_run="off"
+_arg_silent="off"
+
+icloud_path=~/Library/Mobile\ Documents/com~apple~Numbers/Documents
+csv_path=$PWD/Output/MainCSV/
+output_path=$PWD/Output
+
+print_help () {
+	printf '%s\n' "The general script's help msg"
+	printf 'Usage: %s [-f|--file <arg>] [-j|--jira <arg>] [--(no-)dry-run] [--(no-)silent] [-v|--version] [-h|--help] <project> <platform> <business-unit>\n' "$0"
+	printf '\t%s\n' "<project>: name of project, use for export/import correct file in iCloud."
+	printf '\t%s\n' "<platform>: type of operation to use (ios, and/android, bu)."
+	printf '\t%s\n' "<business-unit>: business unit to use to export/import"
+	printf '\t%s\n' "-f,--file: file path use for import (supported 'bu' platform only) (no default)"
+	printf '\t%s\n' "-j,--jira: jira ticket number reference from import (supported 'bu' platform only (default: '-')"
+	printf '\t%s\n' "--dry-run,--no-dry-run: run command with no result (off by default)"
+	printf '\t%s\n' "--silent,--no-silent: run command with no print (off by default)"
+	printf '\t%s\n' "-v,--version: Prints version"
+	printf '\t%s\n' "-h,--help: Prints help"
+}
+
+parse_commandline () {
+	while test $# -gt 0
+	do
+		_key="$1"
+		case "$_key" in
+			-f|--file)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_import_path="$2"
+				shift
+				;;
+			--file=*)
+				_arg_import_path="${_key##--file=}"
+				;;
+			-f*)
+				_arg_import_path="${_key##-f}"
+				;;
+			-j|--jira)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_jira="$2"
+				shift
+				;;
+			--jira=*)
+				_arg_jira="${_key##--jira=}"
+				;;
+			-j*)
+				_arg_jira="${_key##-j}"
+				;;
+			--no-dry-run|--dry-run)
+				_arg_dry_run="on"
+				test "${1:0:5}" = "--no-" && _arg_dry_run="off"
+				;;
+			--no-silent|--silent)
+				_arg_silent="on"
+				test "${1:0:5}" = "--no-" && _arg_silent="off"
+				;;
+			-v|--version)
+				echo $version
+				exit 0
+				;;
+			-v*)
+				echo $version
+				exit 0
+				;;
+			-h|--help)
+				print_help
+				exit 0
+				;;
+			-h*)
+				print_help
+				exit 0
+				;;
+			*)
+				_positionals+=("$1")
+				;;
+		esac
+		shift
+	done
+}
+
+handle_passed_args_count () {
+	_required_args_string="'project', 'platform' and 'business-unit'"
+	test ${#_positionals[@]} -ge 3 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require exactly 3 (namely: $_required_args_string), but got only ${#_positionals[@]}." 1
+	test ${#_positionals[@]} -le 3 || _PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect exactly 3 (namely: $_required_args_string), but got ${#_positionals[@]} (the last one was: '${_positionals[*]: -1}')." 1
+}
+
+assign_positional_args () {
+	_positional_names=('_arg_project' '_arg_platform' '_arg_business_unit' )
+
+	for (( ii = 0; ii < ${#_positionals[@]}; ii++))
+	do
+		eval "${_positional_names[ii]}=\${_positionals[ii]}" || die "Error during argument parsing, possibly an Argbash bug." 1
+	done
+}
+
+log() {
+  if [ ! $_arg_silent == "on" ]; then
+    echo $1
+  fi
+}
+
+reset_output() {
+    # Create main CSV directory if not exist
+    if [ ! -d $csv_path ]; then
+        mkdir -p $csv_path
+    fi
+
+    # Clear all output first
+    rm -rf $output_path/*
+}
+
+export_to_android() {
+    reset_output
+
+    # Convert number to csv
+    osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
+
+    # Select BU
+    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit $_arg_silent $_arg_dry_run
+
+    # Combine CSV
+    cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
+
+    # Generate String Files
+    python babelish_caller.py $output_path $output_path/Android android
+}
+
+export_to_ios() {
+    reset_output
+    
+    # Convert number to csv
+    osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
+
+    # Select BU
+    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit $_arg_silent $_arg_dry_run
+
+    # Combine CSV
+    cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
+
+    # Replace %s with %@
+    sed -i '' -e 's/%s/%@/g' $output_path/merged.csv
+
+    # Change Line Feed To LR instead of CRLF
+    sed -i '' -e 's/[[:space:]]*$//' $output_path/merged.csv
+
+    # Generate String Files
+    python babelish_caller.py $output_path $output_path/iOS ios
+}
+
+export_to_bu() {
+    reset_output
+    
+    # Convert number to csv
+    osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
+
+    # Select BU
+    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit $_arg_silent $_arg_dry_run
+
+    # Convert to Excel
+    business_unit_upper=$(echo $_arg_business_unit | tr a-z A-Z)
+    python csv_to_spreadsheet.py $output_path $output_path/$_arg_project-$business_unit_upper.xlsx $_arg_silent $_arg_dry_run
+}
+
+import_to_bu() {
+    import_csv_path=$output_path/ImportCSV
+
+    reset_output
+
+    # Convert import number/spreadsheet to csv
+    osascript ./spreadsheet_to_csv.scpt "$_arg_import_path" "$import_csv_path"
+
+    # Update import csv to main excel
+    python importer.py "$icloud_path/$_arg_project.numbers" $import_csv_path $_arg_import_path $_arg_business_unit $_arg_jira $_arg_silent $_arg_dry_run
+}
+
+parse_commandline "$@"
+handle_passed_args_count
+assign_positional_args
+
+if [ ! "$_arg_platform" ]; then
+    log 'ERROR: cannot perform command "platform" required."'
+    exit 1
+fi 
+
+if [ ! "$_arg_project" ]; then
+    log 'ERROR: cannot perform command "project" required."'
+    exit 1
+fi 
+
+if [ ! "$_arg_business_unit" ]; then
+    log 'ERROR: cannot perform command "business-unit" required."'
+    exit 1
+fi 
+
+# Check iCloud Numbers file exists.
+if [ ! -e "$icloud_path/$_arg_project.numbers" ]; then
+    log 'ERROR: cannot find "'$_arg_project.numbers'" in your local iCloud.'
+    exit 1 
+fi
+
+#TODO: Install openpyxl
+#TODO: Install appscript
+python -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('openpyxl') else 1)"
+result=$?
+
+if [ ! $result == 0 ]; then
+    log 'ERROR: "openpyxl" not found in pip please install this module first. To install type "sudo pip install openpyxl"'
+    exit 1
+fi
+
+python -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('appscript') else 1)"
+result=$?
+
+if [ ! $result == 0 ]; then
+    log 'ERROR: "appscript" not found in pip please install this module first. To install type "sudo pip install appscript"'
+    exit 1
+fi
+
+case $_arg_platform in 
+    ios)
+        export_to_ios
+        ;;
+    and | android)
+        export_to_android
+        ;;
+    bu)
+        if [ ! "$_arg_import_path" ]; then
+            export_to_bu
+        else
+            import_to_bu
+        fi
+        ;;
+    *)
+        log "ERROR: unknown platform \"$_arg_platform\""
+        exit 1
+        ;;
+esac
