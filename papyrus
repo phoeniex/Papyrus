@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.1"
+version="0.44"
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -33,17 +33,25 @@ csv_path=$PWD/Output/MainCSV/
 output_path=$PWD/Output
 
 print_help () {
-	printf '%s\n' "The general script's help msg"
-	printf 'Usage: %s [-f|--file <arg>] [-j|--jira <arg>] [--(no-)dry-run] [--(no-)silent] [-v|--version] [-h|--help] <project> <platform> <business-unit>\n' "$0"
-	printf '\t%s\n' "<project>: name of project, use for export/import correct file in iCloud."
-	printf '\t%s\n' "<platform>: type of operation to use (ios, and/android, bu)."
-	printf '\t%s\n' "<business-unit>: business unit to use to export/import"
-	printf '\t%s\n' "-f,--file: file path use for import (supported 'bu' platform only) (no default)"
-	printf '\t%s\n' "-j,--jira: jira ticket number reference from import (supported 'bu' platform only (default: '-')"
-	printf '\t%s\n' "--dry-run,--no-dry-run: run command with no result (off by default)"
-	printf '\t%s\n' "--silent,--no-silent: run command with no print (off by default)"
-	printf '\t%s\n' "-v,--version: Prints version"
-	printf '\t%s\n' "-h,--help: Prints help"
+	printf '%s\n' 'Usage:'
+	printf '\t%s %s\n' "$0" '[-f|--file FILE] [-j|--jira JIRA] [--(no-)dry-run] [--(no-)silent] [-v|--version] [-h|--help] <project> <platform> <business-unit>'
+	printf '\n'
+	printf '%s\n' 'Options:'
+	printf '\t%s\t\t%s\n' '<project>' 'name of project, use for export/import correct file in iCloud.'
+	printf '\t%s\t\t%s\n' '<platform>' 'type of operation to use (ios, and/android, bu).'
+	printf '\t%s\t\t%s\n' '<business-unit>' 'business unit to use to export/import'
+	printf '\n'
+	printf '\t%s\t\t%s\n' '-f,--file' 'file path use for import (supported "bu" platform only) (no default)'
+	printf '\t%s\t\t%s\n' '-j,--jira' 'jira reference number for import (supported "bu" platform only) (default: "-")'
+	printf '\t%s\t%s\n' '--dry-run,--no-dry-run' 'run command with no result (off by default)'
+	printf '\t%s\t%s\n' '--silent,--no-silent' 'run command with no print (off by default)'
+	printf '\t%s\t\t%s\n' '-v,--version' 'Prints version'
+	printf '\t%s\t\t%s\n' '-h,--help' 'Prints help'
+	printf ''
+	printf '\n%s\n' 'Platforms:'
+	printf '\t%s\t\t\t%s\n' 'bu' 'Convert localization Numbers to .xlsx file for translators'
+	printf '\t%s\t\t\t%s\n' 'ios' 'Convert localization Numbers to .strings files for iOS'
+	printf '\t%s\t\t%s\n' 'and/android' 'Convert localization Numbers to .xml files for Android'
 }
 
 parse_commandline () {
@@ -143,7 +151,7 @@ export_to_android() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit $_arg_silent $_arg_dry_run
+    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 0 $_arg_silent $_arg_dry_run
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
@@ -159,7 +167,7 @@ export_to_ios() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit $_arg_silent $_arg_dry_run
+    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 0 $_arg_silent $_arg_dry_run
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
@@ -181,7 +189,7 @@ export_to_bu() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit $_arg_silent $_arg_dry_run
+    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1 $_arg_silent $_arg_dry_run
 
     # Convert to Excel
     business_unit_upper=$(echo $_arg_business_unit | tr a-z A-Z)

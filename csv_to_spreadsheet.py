@@ -10,7 +10,7 @@ silent = sys.argv[3] == 'on'
 dry_run = sys.argv[4] == 'on'
 
 if silent:
-   sys.stdout=open(os.devnull, 'w')
+   sys.stdout = open(os.devnull, 'w')
 
 files = [file for file in os.listdir(csv_path) if os.path.isfile(os.path.join(csv_path, file))]
 
@@ -21,6 +21,7 @@ header_font = openpyxl.styles.Font(bold=True, color='FFFFFF')
 alignment_center = openpyxl.styles.Alignment(horizontal='center', vertical='center', wrapText=True)
 alignment_wrap = openpyxl.styles.Alignment(vertical='center', wrapText=True)
 
+# Get language list from lang.info
 lang_list = []
 with open(info_path) as info_file:
     lang_list = info_file.readline().split(',')
@@ -55,8 +56,13 @@ for file in files:
         worksheet['B1'].alignment = alignment_center
         worksheet['B1'].fill = header_fill
 
+        # Create header
         col_index = 3
         for lang in lang_list:
+            # Skip base language
+            if lang == 'base':
+                continue
+
             cell = worksheet.cell(row=1, column=col_index)
             cell.value = 'Translated Text - ' + lang.split('_')[-1].upper() 
             cell.font = header_font
@@ -64,9 +70,12 @@ for file in files:
             cell.fill = header_fill
             col_index += 1
 
+        # Create values
         row_index = 2
         for datas in reader:
             col_index = 1
+            # Apply base text
+
             for data in datas:
                 cell = worksheet.cell(row=row_index, column=col_index)
                 cell.value = data

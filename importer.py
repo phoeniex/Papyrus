@@ -17,7 +17,7 @@ dry_run = sys.argv[7] == 'on'
 if silent:
    sys.stdout=open(os.devnull, 'w')
 
-update_color = (64981, 37481, 2217)
+update_color = (3476, 27123, 25436)
 default_color = (0, 0, 0)
 
 column_key = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ'

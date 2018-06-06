@@ -6,11 +6,12 @@ bu = sys.argv[3].upper()
 localized_path = sys.argv[1]
 info_path = sys.argv[2] + os.sep
 filtered_path = sys.argv[2] + os.sep + 'FilteredCSV' + os.sep
-silent = sys.argv[3] == 'on'
-dry_run = sys.argv[4] == 'on'
+included_base = sys.argv[3]
+silent = sys.argv[4] == 'on'
+dry_run = sys.argv[5] == 'on'
 
 if silent:
-   sys.stdout=open(os.devnull, 'w')
+   sys.stdout = open(os.devnull, 'w')
 
 files = [file for file in os.listdir(localized_path) if os.path.isfile(os.path.join(localized_path, file))]
 
@@ -25,6 +26,9 @@ for file in files:
         header = reader.next()
         
         for csv_key in header:
+            if included_base and csv_key == 'Base':
+                value_key  = 'base'
+                values[value_key] = header.index(csv_key)
             if bu in csv_key:
                 value_key  = 'value_' + csv_key.split('-')[-1].lower()
                 values[value_key] = header.index(csv_key)
@@ -34,7 +38,7 @@ for file in files:
 
         for row in reader:
             localized_object = {'key': row[0]}
-            for (value_key, value_index) in values.items():
+            for (value_key, value_index) in sorted(values.items()):
                 value = row[value_index]
                 if len(value) == 0:
                     continue
