@@ -27,7 +27,6 @@ for file in files:
         header = reader.next()
 
         for csv_key in header:
-            print (included_base)
             if included_base and csv_key == 'Base':
                 value_key  = 'base'
                 values[value_key] = header.index(csv_key)
