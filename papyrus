@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.45"
+version="0.45.1"
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -151,7 +151,7 @@ export_to_android() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 2 0 $_arg_silent $_arg_dry_run
+    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 2 off $_arg_silent $_arg_dry_run
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
@@ -167,7 +167,7 @@ export_to_ios() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1 0 $_arg_silent $_arg_dry_run
+    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1 off $_arg_silent $_arg_dry_run
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
@@ -189,7 +189,7 @@ export_to_bu() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1,2 1 $_arg_silent $_arg_dry_run
+    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1,2 on $_arg_silent $_arg_dry_run
 
     # Convert to Excel
     business_unit_upper=$(echo $_arg_business_unit | tr a-z A-Z)

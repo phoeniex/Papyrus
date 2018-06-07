@@ -7,9 +7,9 @@ localized_path = sys.argv[1]
 info_path = sys.argv[2] + os.sep
 filtered_path = sys.argv[2] + os.sep + 'FilteredCSV' + os.sep
 key_colunn_indexes = list(map(int, sys.argv[4].split(',')))
-included_base = sys.argv[5]
-silent = sys.argv[6] == 'on'
-dry_run = sys.argv[7] == 'on'
+included_base = sys.argv[5] == 'on'.lower()
+silent = sys.argv[6] == 'on'.lower()
+dry_run = sys.argv[7] == 'on'.lower()
 
 if silent:
    sys.stdout = open(os.devnull, 'w')
@@ -25,8 +25,9 @@ for file in files:
     with open(localized_path + file) as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         header = reader.next()
-        
+
         for csv_key in header:
+            print (included_base)
             if included_base and csv_key == 'Base':
                 value_key  = 'base'
                 values[value_key] = header.index(csv_key)
