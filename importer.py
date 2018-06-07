@@ -33,7 +33,7 @@ files = [file for file in os.listdir(import_csv_path) if os.path.isfile(os.path.
 if not dry_run:
     for sheet in document.sheets()[1:]:
         table = sheet.tables()[0]
-        cells = table.cells[(appscript.its.column.address > 2).AND(appscript.its.column.address <= len(table.columns())).AND(appscript.its.row.address > 1)].text_color.set(default_color)
+        cells = table.cells[(appscript.its.column.address > 4).AND(appscript.its.column.address <= len(table.columns())).AND(appscript.its.row.address > 1)].text_color.set(default_color)
 
 # Get data from import csv
 for file in files:
@@ -124,11 +124,12 @@ if log_table.cells[column_key[1] + str(log_table.rows()[-1].address())].value() 
     log_table.rows()[-1].add_row_below()
 
 # Add log
-for row in log_table.rows():
+for row in log_table.rows()[2:]:
     row_name = str(row.address())
 
     # Clear color
-    log_table.cells[len(log_table.column()) + 1 : -1].text_color.set(default_color)
+    start_cell_index = (len(log_table.column()) * 2) + 1
+    log_table.cells[start_cell_index : -1].text_color.set(default_color)
 
     # Find next avaliable row
     if log_table.cells[column_key[1] + row_name].value() == k.missing_value:

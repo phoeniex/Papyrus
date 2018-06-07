@@ -50,7 +50,7 @@ for file in files:
             localized_object = {'key': key}
             for (value_key, value_index) in sorted(values.items()):
                 value = row[value_index]
-                if len(value) == 0:
+                if included_base and len(value) == 0:
                     continue
                 localized_object[value_key] = row[value_index]
 
