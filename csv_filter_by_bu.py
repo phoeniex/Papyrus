@@ -6,9 +6,10 @@ bu = sys.argv[3].upper()
 localized_path = sys.argv[1]
 info_path = sys.argv[2] + os.sep
 filtered_path = sys.argv[2] + os.sep + 'FilteredCSV' + os.sep
-included_base = sys.argv[3]
-silent = sys.argv[4] == 'on'
-dry_run = sys.argv[5] == 'on'
+key_colunn_indexes = list(map(int, sys.argv[4].split(',')))
+included_base = sys.argv[5]
+silent = sys.argv[6] == 'on'
+dry_run = sys.argv[7] == 'on'
 
 if silent:
    sys.stdout = open(os.devnull, 'w')
@@ -37,7 +38,16 @@ for file in files:
             continue
 
         for row in reader:
-            localized_object = {'key': row[0]}
+            for key_column_index in key_colunn_indexes:
+                if len(row[key_column_index]) > 0:
+                    key = row[key_column_index]
+                    break
+
+            # Skip empty key
+            if len(key) == 0:
+                continue
+
+            localized_object = {'key': key}
             for (value_key, value_index) in sorted(values.items()):
                 value = row[value_index]
                 if len(value) == 0:

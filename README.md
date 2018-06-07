@@ -1,14 +1,21 @@
-**Papyrus: An extrodinary localize solution for mobile platform**
+# Papyrus
 
-...
+**An extrodinary localize solution for mobile platform**
 
-# Requirement
+A tool to help you organic the localize string. And also help you communicate to translator as well!. By reading and
+
+## Requirement
 
 This script running on MacOS terminal with sheel script. Drive with Python 3.0 and Applesctipt.
+
 - **openpyxl**: python library for edit Microsoft Excel file format.
 - **appscript**: python library for running Apple Script via python.
 
-# Usage
+## Installation
+
+Current this script does not have installation yet. To use it just copy this repository into your machine and run `papyrus`.
+
+## Usage
 
 ```
 > ./papyrus -h
@@ -32,3 +39,5 @@ Platforms:
 	ios			Convert localization Numbers to .strings files for iOS
 	and/android		Convert localization Numbers to .xml files for Android
 ```
+
+
