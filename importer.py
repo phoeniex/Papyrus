@@ -11,8 +11,9 @@ import_csv_path = sys.argv[2] + os.sep
 import_spreadsheet = sys.argv[3].split('/')[-1]
 business_unit = sys.argv[4].upper()
 jira_ticket = sys.argv[5]
-silent = sys.argv[6] == 'on'
-dry_run = sys.argv[7] == 'on'
+column_key_indexes = list(map(int, sys.argv[6].split(',')))
+silent = sys.argv[7] == 'on'
+dry_run = sys.argv[8] == 'on'
 
 if silent:
    sys.stdout=open(os.devnull, 'w')
@@ -48,7 +49,7 @@ for file in files:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
 
         # Get header
-        headers = reader.next()
+        headers = next(reader)
         for header in headers:
             # Check if this field is translated field, get language code behide dash '-'
             if '-' in header:
@@ -102,15 +103,17 @@ for file in files:
                 # If key that match with import key
                 found_localize = {}
                 for localize in localizes:
-                    if localize['key'] == data_table.cells[column_key[1] + row_name].value():
-                        found_localize = localize
-                        for (lang_name, lang_index) in numbers_langs.items():
-                            print('> apply translation for key "' + data_table.cells[column_key[1] + row_name].value() + '"')
-                            if not dry_run:
-                                cell = data_table.cells[column_key[lang_index] + row_name]
-                                cell.value.set(localize[lang_name])
-                                cell.text_color.set(update_color)
-                
+                    for column_key_index in column_key_indexes:
+                        key = data_table.cells[column_key[column_key_index] + row_name].value()
+                        if localize['key'] == data_table.cells[column_key[column_key_index] + row_name].value():
+                            found_localize = localize
+                            for (lang_name, lang_index) in numbers_langs.items():
+                                print('> apply translation for key "' + data_table.cells[column_key[column_key_index] + row_name].value() + '"')
+                                if not dry_run:
+                                    cell = data_table.cells[column_key[lang_index] + row_name]
+                                    cell.value.set(localize[lang_name])
+                                    cell.text_color.set(update_color)
+            
                 # Also remove found localize to avoid duplicate run loop
                 if len(found_localize) > 0:
                     localizes.remove(found_localize)

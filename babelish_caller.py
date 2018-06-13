@@ -7,7 +7,7 @@ def call_babelish(lang_config):
     command = 'babelish ' + platform_string + ' --filename=' + csv_path + ' --keys_column=0 --langs=' + lang_config + ' --output_dir=' + output_path
     subprocess.call(command, shell=True)
 
-csv_original_path = sys.argv[1] + os.sep + 'merged.csv'
+csv_original_path = sys.argv[1] + os.sep + 'merged_extracted.csv'
 csv_path = sys.argv[1] + os.sep + 'merged_removed.csv'
 info_path = sys.argv[1] + os.sep + 'lang.info'
 output_path = sys.argv[2]
@@ -22,7 +22,7 @@ with open(info_path) as info_file:
 localized = []
 with open(csv_original_path) as csvfile:
     reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-    localized.append(reader.next())
+    localized.append(next(reader))
 
     for row in reader:
         if row[0] != 'key':

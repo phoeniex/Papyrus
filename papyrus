@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.46.0"
+version="0.47.0"
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -151,13 +151,13 @@ export_to_android() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 2 off $_arg_silent $_arg_dry_run
+    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 2 off $_arg_silent $_arg_dry_run
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
 
     # Generate String Files
-    python babelish_caller.py $output_path $output_path/Android android
+    python3 babelish_caller.py $output_path $output_path/Android android
 }
 
 export_to_ios() {
@@ -167,19 +167,16 @@ export_to_ios() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1 off $_arg_silent $_arg_dry_run
+    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1 off $_arg_silent $_arg_dry_run
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
 
-    # Replace %s with %@
-    sed -i '' -e 's/%s/%@/g' $output_path/merged.csv
-
-    # Change Line Feed To LR instead of CRLF
-    sed -i '' -e 's/[[:space:]]*$//' $output_path/merged.csv
+    # Change platform specific
+	python3 platform_extractor.py $output_path/merged.csv $output_path/merged_extracted.csv ios
 
     # Generate String Files
-    python babelish_caller.py $output_path $output_path/iOS ios
+    python3 babelish_caller.py $output_path $output_path/iOS ios
 }
 
 export_to_bu() {
@@ -189,11 +186,11 @@ export_to_bu() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1,2 on $_arg_silent $_arg_dry_run
+    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1,2 on $_arg_silent $_arg_dry_run
 
     # Convert to Excel
     business_unit_upper=$(echo $_arg_business_unit | tr a-z A-Z)
-    python csv_to_spreadsheet.py $output_path $output_path/$_arg_project-$business_unit_upper.xlsx $_arg_silent $_arg_dry_run
+    python3 csv_to_spreadsheet.py $output_path $output_path/$_arg_project-$business_unit_upper.xlsx $_arg_silent $_arg_dry_run
 }
 
 import_to_bu() {
@@ -205,7 +202,7 @@ import_to_bu() {
     osascript ./spreadsheet_to_csv.scpt "$_arg_import_path" "$import_csv_path"
 
     # Update import csv to main excel
-    python importer.py "$icloud_path/$_arg_project.numbers" $import_csv_path $_arg_import_path $_arg_business_unit $_arg_jira $_arg_silent $_arg_dry_run
+    python3 importer.py "$icloud_path/$_arg_project.numbers" $import_csv_path $_arg_import_path $_arg_business_unit $_arg_jira 1,2 $_arg_silent $_arg_dry_run
 }
 
 parse_commandline "$@"
@@ -235,19 +232,19 @@ fi
 
 #TODO: Install openpyxl
 #TODO: Install appscript
-python -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('openpyxl') else 1)"
+python3 -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('openpyxl') else 1)"
 result=$?
 
 if [ ! $result == 0 ]; then
-    log 'ERROR: "openpyxl" not found in pip please install this module first. To install type "sudo pip install openpyxl"'
+    log 'ERROR: "openpyxl" not found in pip please install this module first. To install type "python3 -m pip install openpyxl"'
     exit 1
 fi
 
-python -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('appscript') else 1)"
+python3 -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('appscript') else 1)"
 result=$?
 
 if [ ! $result == 0 ]; then
-    log 'ERROR: "appscript" not found in pip please install this module first. To install type "sudo pip install appscript"'
+    log 'ERROR: "appscript" not found in pip please install this module first. To install type "python3 -m pip install appscript"'
     exit 1
 fi
 

@@ -36,10 +36,8 @@ for file in files:
     worksheet = workbook.create_sheet(sheet_name)
     worksheet.page_setup.fitToWidth = 1
 
-    with open(csv_path + file) as csvfile:
+    with open(csv_path + file) as csvfile[1:]:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-        # ignore header
-        reader.next()
 
         # cell property
         worksheet.column_dimensions['A'].hidden = True

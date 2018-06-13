@@ -24,7 +24,7 @@ for file in files:
     values = {}
     with open(localized_path + file) as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-        header = reader.next()
+        header = next(reader)
 
         for csv_key in header:
             if included_base and csv_key == 'Base':
