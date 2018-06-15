@@ -9,7 +9,7 @@ def extract_string(string, platform):
         extracted_string = string.replace('%s', '%@')
     elif platform == 'android':
         extracted_string = string
-
+    
     return extracted_string
 
 input_path = sys.argv[1]
@@ -31,7 +31,7 @@ with open(input_path) as csvfile:
         localize = row
         for (value_key, value_index) in sorted(values.items()):
             value = row[value_index]
-            localize[value_index] = row[value_index]
+            localize[value_index] = extract_string(row[value_index], platform)
         localizes.append(localize)
 
 with open(output_path, 'w') as csvfile:

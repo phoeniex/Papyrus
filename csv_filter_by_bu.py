@@ -38,6 +38,7 @@ for file in files:
             continue
 
         for row in reader:
+            key = ""
             for key_column_index in key_colunn_indexes:
                 if len(row[key_column_index]) > 0:
                     key = row[key_column_index]
