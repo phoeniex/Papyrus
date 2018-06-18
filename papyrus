@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.47.1"
+version="0.48.0"
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -156,6 +156,9 @@ export_to_android() {
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
 
+	# Change platform specific
+	python3 platform_extractor.py $output_path/merged.csv $output_path/merged_extracted.csv android
+
     # Generate String Files
     python3 babelish_caller.py $output_path $output_path/Android android
 }
@@ -195,11 +198,11 @@ export_to_bu() {
 
 import_to_bu() {
     import_csv_path=$output_path/ImportCSV
-
+	
     reset_output
 
     # Convert import number/spreadsheet to csv
-    osascript ./spreadsheet_to_csv.scpt "$_arg_import_path" "$import_csv_path"
+	python3 ./excel_to_csv.py "$_arg_import_path" "$import_csv_path"
 
     # Update import csv to main excel
     python3 importer.py "$icloud_path/$_arg_project.numbers" $import_csv_path $_arg_import_path $_arg_business_unit $_arg_jira 1,2 $_arg_silent $_arg_dry_run

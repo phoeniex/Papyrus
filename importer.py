@@ -104,11 +104,12 @@ for file in files:
                 found_localize = {}
                 for localize in localizes:
                     for column_key_index in column_key_indexes:
-                        key = data_table.cells[column_key[column_key_index] + row_name].value()
-                        if localize['key'] == data_table.cells[column_key[column_key_index] + row_name].value():
+                        # Change index to base 1 instead of base 0
+                        key = data_table.cells[column_key[column_key_index + 1] + row_name].value()
+                        if localize['key'] == key:
                             found_localize = localize
                             for (lang_name, lang_index) in numbers_langs.items():
-                                print('> apply translation for key "' + data_table.cells[column_key[column_key_index] + row_name].value() + '"')
+                                print('> apply translation for key "' + key + '"')
                                 if not dry_run:
                                     cell = data_table.cells[column_key[lang_index] + row_name]
                                     cell.value.set(localize[lang_name])

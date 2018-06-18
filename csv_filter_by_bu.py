@@ -20,7 +20,7 @@ if not os.path.exists(filtered_path):
     os.makedirs(filtered_path)
 
 for file in files:
-    localized = []
+    localized = {}
     values = {}
     with open(localized_path + file) as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
@@ -31,9 +31,11 @@ for file in files:
                 value_key  = 'base'
                 values[value_key] = header.index(csv_key)
             if bu in csv_key:
+                # Get language denotation from header title e.g. 'TH-EN' got 'en'
                 value_key  = 'value_' + csv_key.split('-')[-1].lower()
                 values[value_key] = header.index(csv_key)
 
+        # Skip blank key
         if len(values) == 0:
             continue
 
@@ -48,16 +50,19 @@ for file in files:
             if len(key) == 0:
                 continue
 
-            localized_object = {'key': key}
+            localized_key = key
+            localized_object = {}
             for (value_key, value_index) in sorted(values.items()):
                 value = row[value_index]
+                # skip blank key if not setting as included
                 if included_base and len(value) == 0:
                     continue
-                localized_object[value_key] = row[value_index]
 
-            # only key, no need to add
-            if len(localized_object) > 1:
-                localized.append(localized_object)
+                localized_object[value_key] = value
+
+            # if at lease one value
+            if len(localized_object) > 0:
+                localized[localized_key] = localized_object
 
     if len(localized) == 0:
         continue
@@ -68,7 +73,11 @@ for file in files:
 
         writer = csv.DictWriter(csvfile, values_and_key)
         writer.writeheader()
-        writer.writerows(localized)
+
+        for key, value in localized.items():
+            value['key'] = key
+            print(value)
+            writer.writerow(value)
 
     with open(info_path + 'lang.info', 'w') as info_file:
         info_file.write(','.join(values.keys()))
