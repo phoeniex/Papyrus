@@ -76,7 +76,6 @@ for file in files:
 
         for key, value in localized.items():
             value['key'] = key
-            print(value)
             writer.writerow(value)
 
     with open(info_path + 'lang.info', 'w') as info_file:

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.48.0"
+version="0.48.1"
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -233,21 +233,23 @@ if [ ! -e "$icloud_path/$_arg_project.numbers" ]; then
     exit 1 
 fi
 
-#TODO: Install openpyxl
-#TODO: Install appscript
-python3 -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('openpyxl') else 1)"
-result=$?
-
-if [ ! $result == 0 ]; then
-    log 'ERROR: "openpyxl" not found in pip please install this module first. To install type "python3 -m pip install openpyxl"'
-    exit 1
+if ! [ -x "$(command -v python3)" ]; then
+	log 'ERROR: python3 is not installed. To install type "brew install python3"'
+	exit 1
 fi
 
-python3 -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('appscript') else 1)"
+if ! [ -x "$(command -v babelish)" ]; then
+	log 'ERROR: python3 is not installed. To install type "gem install babelish"'
+	exit 1
+fi
+
+python3 -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('openpyxl') and pkgutil.find_loader('appscript') else 1)"
 result=$?
 
 if [ ! $result == 0 ]; then
-    log 'ERROR: "appscript" not found in pip please install this module first. To install type "python3 -m pip install appscript"'
+    log 'ERROR: required libraries in python 3 not found in pip please install those libraries first. To install type'
+	log '> "python3 -m pip install openpyxl" and/or'
+	log '> "python3 -m pip install appscript"'
     exit 1
 fi
 
