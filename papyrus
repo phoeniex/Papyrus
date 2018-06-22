@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.48.1"
+version="0.48.2"
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -234,7 +234,7 @@ if [ ! -e "$icloud_path/$_arg_project.numbers" ]; then
 fi
 
 if ! [ -x "$(command -v python3)" ]; then
-	log 'ERROR: python3 is not installed. To install type "brew install python3"'
+	log 'ERROR: python3 is not installed. please download Latest Python 3 Release here: https://www.python.org/downloads/mac-osx/'
 	exit 1
 fi
 
