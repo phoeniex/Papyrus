@@ -28,8 +28,7 @@ _arg_jira="-"
 _arg_dry_run="off"
 _arg_silent="off"
 
-_script=$(readlink -f "$0")
-_script_path=$(dirname "$_script")
+_script_path=$(perl -MCwd -e 'print Cwd::abs_path shift')
 _script_name="$0"
 _branch="master"
 _args=( "$@" )
@@ -147,9 +146,9 @@ self_update() {
 
     [ -n $(git diff --name-only origin/$_branch | grep $_script_name) ] && {
         echo "Found a new version of me, updating myself..."
-        git pull --force
+        git pull
         git checkout $_branch
-        git pull --force
+        git pull
         echo "Running the new version..."
         exec "$_script_name" "${_args[@]}"
 
@@ -158,7 +157,6 @@ self_update() {
     }
     echo "Already the latest version."
 }
-
 
 reset_output() {
     # Create main CSV directory if not exist
