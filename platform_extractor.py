@@ -8,7 +8,7 @@ def extract_string(string, platform):
     if platform == 'ios':
         extracted_string = string.replace('%s', '%@')
     elif platform == 'android':
-        extracted_string = string
+        extracted_string = string.replace('&', '&amp;')
     
     return extracted_string
 
