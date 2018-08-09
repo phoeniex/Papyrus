@@ -142,20 +142,27 @@ log() {
 
 self_update() {
     cd $_script_path
-    git fetch
 
-    [ -n $(git diff --name-only origin/$_branch | grep $_script_name) ] && {
-        echo "Found a new version of me, updating myself..."
-        git pull
-        git checkout $_branch
-        git pull
+	upstream=${1:-'origin/master'}
+	local=$(git rev-parse @{0})
+	remote=$(git rev-parse "$upstream")
+	base=$(git merge-base @{0} "$upstream")
+
+	if [ $local = $remote ]; then
+    	echo "Up-to-date"
+	elif [ $local = $base ]; then
+		echo "Found a new version, updating..."
+		git pull
         echo "Running the new version..."
         exec "$_script_name" "${_args[@]}"
 
         # Now exit this old instance
         exit 1
-    }
-    echo "Already the latest version."
+	elif [ $remote = $base ]; then
+		echo "Need to push"
+	else
+		echo "Diverged"
+	fi
 }
 
 reset_output() {
