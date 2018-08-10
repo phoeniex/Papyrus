@@ -148,7 +148,13 @@ self_update() {
 	remote=$(git rev-parse "$upstream")
 	base=$(git merge-base @{0} "$upstream")
 
-	if [ $local = $base ]; then
+	echo $local
+ 	echo $remote
+	echo $base	
+
+	if test $local = $remote ; then
+    	echo "Up-to-date"
+	elif test $local = $base ; then
 		echo "Found a new version, updating..."
 		git pull
         echo "Running the new version..."
@@ -156,6 +162,10 @@ self_update() {
 
         # Now exit this old instance
         exit 1
+	elif test $remote = $base ; then
+		echo "Need to push"
+	else
+		echo "Diverged"
 	fi
 }
 
