@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.49.1"
+version="0.49.2"
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -57,7 +57,6 @@ print_help () {
 	printf '\t%s\t\t\t%s\n' 'bu' 'Convert localization Numbers to .xlsx file for translators'
 	printf '\t%s\t\t\t%s\n' 'ios' 'Convert localization Numbers to .strings files for iOS'
 	printf '\t%s\t\t%s\n' 'and/android' 'Convert localization Numbers to .xml files for Android'
-	printf '\t%s\t\t%s\n' 'install' 'For Install Script To Path.'
 }
 
 parse_commandline () {
@@ -153,7 +152,7 @@ self_update() {
 	echo $base	
 
 	if test $local = $remote ; then
-    	echo "Up-to-date"
+    	:
 	elif test $local = $base ; then
 		echo "Found a new version, updating..."
 		git pull
@@ -163,9 +162,9 @@ self_update() {
         # Now exit this old instance
         exit 1
 	elif test $remote = $base ; then
-		echo "Need to push"
+		:
 	else
-		echo "Diverged"
+		:
 	fi
 }
 
@@ -306,9 +305,6 @@ case $_arg_platform in
             import_to_bu
         fi
         ;;
-	install)
-		PATH=$PATH:$(pwd)
-		;;
     *)
         log "ERROR: unknown platform \"$_arg_platform\""
         exit 1
