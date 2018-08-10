@@ -147,10 +147,6 @@ self_update() {
 	remote=$(git rev-parse "$upstream")
 	base=$(git merge-base @{0} "$upstream")
 
-	echo $local
- 	echo $remote
-	echo $base	
-
 	if test $local = $remote ; then
     	:
 	elif test $local = $base ; then
