@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.49.3"
+version="0.50.0"
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -141,6 +141,9 @@ log() {
 
 self_update() {
     cd $_script_path
+
+	echo "Fetching repo..."
+	git fetch
 
 	upstream=${1:-'origin/master'}
 	local=$(git rev-parse @{0})
