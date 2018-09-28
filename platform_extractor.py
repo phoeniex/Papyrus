@@ -9,6 +9,7 @@ def extract_string(string, platform):
         extracted_string = string.replace('%s', '%@')
     elif platform == 'android':
         extracted_string = string.replace('&', '&amp;')
+        extracted_string = string.replace("'", "\\'")
     
     return extracted_string
 
