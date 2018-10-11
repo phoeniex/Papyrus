@@ -1,6 +1,5 @@
 #!/bin/bash
-
-version="0.50.0"
+version="0.51.0"
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -193,7 +192,7 @@ export_to_android() {
 	python3 platform_extractor.py $output_path/merged.csv $output_path/merged_extracted.csv android
 
     # Generate String Files
-    python3 babelish_caller.py $output_path $output_path/Android android
+    python3 localizer_caller.py $output_path $output_path/Android android
 }
 
 export_to_ios() {
@@ -212,7 +211,7 @@ export_to_ios() {
 	python3 platform_extractor.py $output_path/merged.csv $output_path/merged_extracted.csv ios
 
     # Generate String Files
-    python3 babelish_caller.py $output_path $output_path/iOS ios
+    python3 localizer_caller.py $output_path $output_path/iOS ios
 }
 
 export_to_bu() {

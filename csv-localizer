@@ -1,0 +1,199 @@
+#!/usr/bin/env python
+import sys, argparse, logging, os, csv
+
+# Gather our code in a main() function
+def main(args, loglevel):
+  logging.basicConfig(format="%(message)s", level=loglevel)
+  PLATFORM = args.platform
+  IN_PATH = args.input
+  OUT_PATH = args.output
+  LANG_KEYS = None  #static will change later
+  print '\n'
+  logging.info("Start Localizing .... ")
+  print '\n'
+  logging.info("------------------------------------")
+  
+  # check source path
+  logging.debug("\n")
+  logging.debug("Validating source path ...")
+  logging.debug("\n")
+  if not os.path.exists(IN_PATH):
+    logging.error('Source path not found, Invalid path.')
+    logging.debug("\n")
+    return
+  logging.debug("Valid source path, finding csv file ...")
+  logging.debug("\n")
+  logging.debug("Validating target path ...")
+  logging.debug("\n")
+  # check output path
+  if not os.path.exists(OUT_PATH):
+    logging.error('Target path not found, Invalid path.')
+    logging.debug("\n")
+    return
+  logging.debug("Valid target path, generating output directory ...")
+  logging.debug("\n")
+  
+  # generate output directory
+  OUTPUT_DIR = OUT_PATH
+  if not os.path.exists(OUTPUT_DIR):
+    os.makedirs(OUTPUT_DIR)
+    logging.debug("Output directory generated : %s" % OUTPUT_DIR)
+    logging.debug("\n")
+  else:
+    logging.debug("Using output directory: %s" % OUTPUT_DIR)
+    logging.debug("\n")
+  
+  logging.debug("\n")
+  if PLATFORM == "ios":
+    logging.debug("Platform : %s" % PLATFORM)
+  elif PLATFORM == "android":
+    logging.debug("Platform : %s" % PLATFORM)
+  else:
+    logging.warn("Invalid platform, platform should be ios or android only")
+    logging.debug("\n")
+    logging.error('ERROR LOCALIZING.')
+    return
+
+  logging.info("Generation output : %s" % OUTPUT_DIR)
+  generate_keys(IN_PATH, OUTPUT_DIR, PLATFORM)
+  print '\n'
+  logging.info("DONE LOCALIZING.")
+  print '\n'
+
+def generate_keys(source_path, output, platform):
+  base_out_dir = output
+  full_out_paths = None
+  allwrites = None
+      
+  with open(source_path, 'rb') as csvfile:
+    reader = csv.reader(csvfile, delimiter=',')
+    # create language key
+    for i, line in enumerate(reader):
+      if i == 0:
+        line.remove(line[0])
+
+        LANG_KEYS = [key.replace('value_', '') for key in line]  # assign new value to key
+        
+        # iterate each language
+        lang_path = ""
+        for lang in LANG_KEYS:
+          if platform == "ios":
+            lang_path = os.path.join(base_out_dir, "{0}.lproj/".format(lang))
+          
+          if platform == "android":
+            lang_path = os.path.join(base_out_dir, "values-{0}/".format(lang))
+          
+          # Generate directory per language key
+          if not os.path.exists(lang_path):
+            os.makedirs(lang_path)
+
+        if platform == "ios":
+          lang_path = os.path.join(base_out_dir, "Base.lproj/")
+          
+        if platform == "android":
+          lang_path = os.path.join(base_out_dir, "values/")
+        
+        # Generate directory for base
+        if not os.path.exists(lang_path):
+          os.makedirs(lang_path)
+
+    if platform == "ios":
+      full_out_paths = [os.path.join(base_out_dir, "{0}.lproj/".format(langKey) + "Localizable.strings") for langKey in LANG_KEYS]
+    if platform == "android":
+      full_out_paths = [os.path.join(base_out_dir, "values-{0}/".format(langKey) + "strings.xml") for langKey in LANG_KEYS]
+      
+  allwrites = [open(out_path, 'w') for out_path in full_out_paths]
+  
+  if platform == "ios":
+    logging.info("Localizing: %s", LANG_KEYS)
+    start_localize_ios(source_path, allwrites, LANG_KEYS)
+    logging.info("Localizing: Base")
+    start_localize_ios(source_path, [open(os.path.join(base_out_dir, "Base.lproj/" + "Localizable.strings"), 'w')], [LANG_KEYS[0]])
+  if platform == "android":
+    logging.info("Localizing: %s", LANG_KEYS)
+    start_localize_android(source_path, allwrites, LANG_KEYS)
+    logging.info("Localizing: Base")
+    start_localize_android(source_path, [open(os.path.join(base_out_dir, "values/" + "strings.xml"), 'w')], [LANG_KEYS[0]])
+
+# =========================================================================
+# ++++++++++++++++++++++++++++++ iOS ++++++++++++++++++++++++++++++++++++++
+# =========================================================================
+def start_localize_ios(source_path, all_writes, lang_keys):
+  allwrites = all_writes
+  fullpath = source_path
+  logging.info("Localizing: %s", source_path)
+
+  with open(fullpath, 'rb') as csvfile:    
+    reader = csv.reader(csvfile, delimiter=',')
+    iterrows = iter(reader)
+    next(iterrows) # skip first line (it is header).
+    
+    for row in iterrows:
+      row_key = row[0].replace(" ", "")
+      # comment
+      if row_key[:2] == '//':
+        continue
+
+      row_values = [row[i+1].replace('value_', '') for i in range(len(lang_keys))]
+      # if any row is empty, skip it!
+      if any([value == "" for value in row_values]):
+        continue
+      else:
+        [fwrite.write('"{key}" = "{lang}";\n'.format(key=row_key, lang=row_values[idx].replace('value_', ''))) for idx, fwrite in enumerate(allwrites)]
+  [fwrite.close() for fwrite in allwrites]
+
+
+# =========================================================================
+# ++++++++++++++++++++++++++++++ Android ++++++++++++++++++++++++++++++++++
+# =========================================================================
+def start_localize_android(source_path, all_writes, lang_keys):
+  allwrites = all_writes
+
+  [fwrite.write('<?xml version="1.0" encoding="utf-8"?>\n') for fwrite in allwrites]
+  [fwrite.write('<resources>') for fwrite in allwrites]
+
+  with open(source_path, 'rb') as csvfile:    
+    reader = csv.reader(csvfile, delimiter=',')
+    iterrows = iter(reader)
+    next(iterrows) # skip first line (it is header).
+    
+    for row in iterrows:
+      row_key = row[0].replace(" ", "")
+      # comment
+      if row_key[:2] == '//':
+        continue
+
+      row_values = [row[i+1] for i in range(len(lang_keys))]
+      # if any row is empty, skip it!
+      if any([value == "" for value in row_values]):
+        continue
+      elif any(['%' in value for value in row_values]):
+        [fwrite.write('\t<string name="{key}" formatted="false">{lang}</string>\n'.format(key=row_key, lang=row_values[idx].replace('value_', '',))) for idx, fwrite in enumerate(allwrites)]
+      else:
+        [fwrite.write('\t<string name="{key}">{lang}</string>\n'.format(key=row_key, lang=row_values[idx].replace('value_', '',))) for idx, fwrite in enumerate(allwrites)]
+    [fwrite.write('</resources>') for fwrite in allwrites]
+  [fwrite.close() for fwrite in allwrites]
+
+
+# =========================================================================
+# +++++++ Standard boilerplate to call the main() function to begin +++++++
+# =========================================================================
+
+parser = argparse.ArgumentParser(description = "Locatization commands")
+parser.add_argument("-p",help="Specify Platform (iOS, Android)" ,dest="platform", type=str, required=True)
+parser.add_argument("-i",help="Input source, CSV file path" ,dest="input", type=str, required=True)
+parser.add_argument("-o",help="Generated output path for localizable files" ,dest="output", type=str, required=True)
+
+parser.add_argument("-v",
+                    "--verbose",
+                    help="increase output verbosity",
+                    action="store_true")
+args = parser.parse_args()
+  
+# Setup logging
+if args.verbose:
+  loglevel = logging.DEBUG
+else:
+  loglevel = logging.INFO
+
+main(args, loglevel)

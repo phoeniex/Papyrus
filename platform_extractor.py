@@ -4,15 +4,16 @@ import os
 import csv
 
 def extract_string(string, platform):
+    if string[:6] == '<CODE>':
+        return string[6:]
+
     extracted_string = string
     if platform == 'ios':
         extracted_string = string.replace('%s', '%@')
     elif platform == 'android':
         extracted_string = string.replace('&', '&amp;')
         extracted_string = extracted_string.replace("'", "\\'")
-        print(extracted_string)
         extracted_string = extracted_string.replace('"', '\\"')
-        print(extracted_string)
     
     return extracted_string
 
