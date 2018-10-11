@@ -4,7 +4,7 @@ import os
 import csv
 
 def extract_string(string, platform):
-    if string[:6] == '<CODE>':
+    if string[:6].upper == '<CODE>':
         return string[6:]
 
     extracted_string = string

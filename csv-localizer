@@ -107,12 +107,12 @@ def generate_keys(source_path, output, platform):
   if platform == "ios":
     logging.info("Localizing: %s", LANG_KEYS)
     start_localize_ios(source_path, allwrites, LANG_KEYS)
-    logging.info("Localizing: Base")
+    logging.info("Localizing Default Language With " + LANG_KEYS[0])
     start_localize_ios(source_path, [open(os.path.join(base_out_dir, "Base.lproj/" + "Localizable.strings"), 'w')], [LANG_KEYS[0]])
   if platform == "android":
     logging.info("Localizing: %s", LANG_KEYS)
     start_localize_android(source_path, allwrites, LANG_KEYS)
-    logging.info("Localizing: Base")
+    logging.info("Localizing Default Language With " + LANG_KEYS[0])
     start_localize_android(source_path, [open(os.path.join(base_out_dir, "values/" + "strings.xml"), 'w')], [LANG_KEYS[0]])
 
 # =========================================================================
@@ -121,7 +121,6 @@ def generate_keys(source_path, output, platform):
 def start_localize_ios(source_path, all_writes, lang_keys):
   allwrites = all_writes
   fullpath = source_path
-  logging.info("Localizing: %s", source_path)
 
   with open(fullpath, 'rb') as csvfile:    
     reader = csv.reader(csvfile, delimiter=',')
