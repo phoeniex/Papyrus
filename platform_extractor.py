@@ -10,6 +10,7 @@ def extract_string(string, platform):
     extracted_string = string
     if platform == 'ios':
         extracted_string = string.replace('%s', '%@')
+        extracted_string = extracted_string.replace('"', '\\"')
     elif platform == 'android':
         extracted_string = string.replace('&', '&amp;')
         extracted_string = extracted_string.replace("'", "\\'")
