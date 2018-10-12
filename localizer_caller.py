@@ -3,7 +3,7 @@ import sys
 import os
 import csv
 
-def call_localizer(lang_config):
+def call_localizer():
     command = './csv-localizer -p ' + platform_string + ' -i ' + csv_path + ' -o ' + output_path
     subprocess.call(command, shell=True)
 
@@ -35,9 +35,4 @@ with open(csv_path, 'w') as csvfile:
     writer.writerow(header)
     writer.writerows(localized)
 
-for lang in lang_list:
-    lang_config = lang + ':' + lang.split('_')[-1]
-    call_localizer(lang_config)
-
-# Call to set base language, always use first language
-call_localizer(lang_list[0] + ':Base')
+call_localizer()

@@ -107,12 +107,12 @@ def generate_keys(source_path, output, platform):
   if platform == "ios":
     logging.info("Localizing: %s", LANG_KEYS)
     start_localize_ios(source_path, allwrites, LANG_KEYS)
-    logging.info("Localizing Default Language With " + LANG_KEYS[0])
+    logging.info("Localizing Default Language With '" + LANG_KEYS[0] + "'")
     start_localize_ios(source_path, [open(os.path.join(base_out_dir, "Base.lproj/" + "Localizable.strings"), 'w')], [LANG_KEYS[0]])
   if platform == "android":
     logging.info("Localizing: %s", LANG_KEYS)
     start_localize_android(source_path, allwrites, LANG_KEYS)
-    logging.info("Localizing Default Language With " + LANG_KEYS[0])
+    logging.info("Localizing Default Language With '" + LANG_KEYS[0] + "'")
     start_localize_android(source_path, [open(os.path.join(base_out_dir, "values/" + "strings.xml"), 'w')], [LANG_KEYS[0]])
 
 # =========================================================================
@@ -134,11 +134,7 @@ def start_localize_ios(source_path, all_writes, lang_keys):
         continue
 
       row_values = [row[i+1].replace('value_', '') for i in range(len(lang_keys))]
-      # if any row is empty, skip it!
-      if any([value == "" for value in row_values]):
-        continue
-      else:
-        [fwrite.write('"{key}" = "{lang}";\n'.format(key=row_key, lang=row_values[idx].replace('value_', ''))) for idx, fwrite in enumerate(allwrites)]
+      [fwrite.write('"{key}" = "{lang}";\n'.format(key=row_key, lang=row_values[idx].replace('value_', ''))) for idx, fwrite in enumerate(allwrites)]
   [fwrite.close() for fwrite in allwrites]
 
 
@@ -163,10 +159,7 @@ def start_localize_android(source_path, all_writes, lang_keys):
         continue
 
       row_values = [row[i+1] for i in range(len(lang_keys))]
-      # if any row is empty, skip it!
-      if any([value == "" for value in row_values]):
-        continue
-      elif any(['%' in value for value in row_values]):
+      if any(['%' in value for value in row_values]):
         [fwrite.write('\t<string name="{key}" formatted="false">{lang}</string>\n'.format(key=row_key, lang=row_values[idx].replace('value_', '',))) for idx, fwrite in enumerate(allwrites)]
       else:
         [fwrite.write('\t<string name="{key}">{lang}</string>\n'.format(key=row_key, lang=row_values[idx].replace('value_', '',))) for idx, fwrite in enumerate(allwrites)]
