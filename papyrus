@@ -1,5 +1,5 @@
 #!/bin/bash
-version="0.51.3"
+version="0.51.4"
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -268,11 +268,6 @@ fi
 
 if ! [ -x "$(command -v python3)" ]; then
 	log 'ERROR: python3 is not installed. please download Latest Python 3 Release here: https://www.python.org/downloads/mac-osx/'
-	exit 1
-fi
-
-if ! [ -x "$(command -v babelish)" ]; then
-	log 'ERROR: python3 is not installed. To install type "gem install babelish"'
 	exit 1
 fi
 
