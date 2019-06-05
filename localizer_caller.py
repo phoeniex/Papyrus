@@ -12,7 +12,12 @@ csv_path = sys.argv[1] + os.sep + 'merged_removed.csv'
 info_path = sys.argv[1] + os.sep + 'lang.info'
 output_path = sys.argv[2]
 platform = sys.argv[3].lower()
+silent = sys.argv[4].lower() == 'on'
+dry_run = sys.argv[5].lower() == 'on'
 platform_string = 'ios' if platform == 'ios' else 'android'
+
+if silent:
+   sys.stdout = open(os.devnull, 'w')
 
 os.makedirs(output_path, exist_ok=True)
 

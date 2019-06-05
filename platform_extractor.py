@@ -18,27 +18,64 @@ def extract_string(string, platform):
     
     return extracted_string
 
-input_path = sys.argv[1]
-output_path = sys.argv[2]
-platform = sys.argv[3]
+def convert_csv_to_dict(csv_path):
+    values = {}
+    header = []
+    localizes = []
 
-localizes = []
-values = {}
-header = []
-with open(input_path) as csvfile:
-    reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-    header = next(reader)
+    with open(csv_path) as csvfile:
+        reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+        header = next(reader)
+
+        for csv_key in header:
+            if 'value_' in csv_key:
+                values[csv_key] = header.index(csv_key)
+
+        for row in reader:
+            localize = row
+            for (_, value_index) in sorted(values.items()):
+                localize[value_index] = extract_string(row[value_index], platform)
+            localizes.append(localize)
+    return header, localizes
+
+def apply_template_key(header, templates, localizes): 
+    valueIndices = []
+    keyIndex = 0
+    appliedLocalizes = []
 
     for csv_key in header:
         if 'value_' in csv_key:
-            values[csv_key] = header.index(csv_key)
+            valueIndices.append(header.index(csv_key))
+        elif 'key' in csv_key:
+            keyIndex = header.index(csv_key)
 
-    for row in reader:
-        localize = row
-        for (value_key, value_index) in sorted(values.items()):
-            value = row[value_index]
-            localize[value_index] = extract_string(row[value_index], platform)
-        localizes.append(localize)
+    for localize in localizes:
+        appliedLocalize = localize
+
+        for valueIndex in valueIndices:
+            for template in templates:
+                # if some of value in localize match with template key
+                if appliedLocalize[valueIndex] == template[keyIndex]:
+                    print('Replace Template ', appliedLocalize[keyIndex], ' with ', template[valueIndex])
+                    appliedLocalize[valueIndex] = template[valueIndex]
+        
+        appliedLocalizes.append(appliedLocalize)
+    return appliedLocalizes
+
+input_path = sys.argv[1]
+template_info_path = sys.argv[2]
+output_path = sys.argv[3]
+platform = sys.argv[4]
+silent = sys.argv[5].lower() == 'on'
+dry_run = sys.argv[6].lower() == 'on'
+
+if silent:
+   sys.stdout = open(os.devnull, 'w')
+
+header, localizes = convert_csv_to_dict(input_path)
+_, templates = convert_csv_to_dict(template_info_path)
+
+localizes = apply_template_key(header, templates, localizes)
 
 with open(output_path, 'w') as csvfile:
     writer = csv.writer(csvfile)

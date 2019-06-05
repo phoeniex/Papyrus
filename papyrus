@@ -1,5 +1,5 @@
 #!/bin/bash
-version="0.51.4"
+version="1.0.0"
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -38,22 +38,19 @@ output_path=$PWD/Output
 
 print_help () {
 	printf '%s\n' 'Usage:'
-	printf '\t%s %s\n' "$0" '[-f|--file FILE] [-j|--jira JIRA] [--(no-)dry-run] [--(no-)silent] [-v|--version] [-h|--help] <project> <platform> <business-unit>'
+	printf '\t%s %s\n' "$0" '[--(no-)dry-run] [--(no-)silent] [-v|--version] [-h|--help] <project> <platform> <business-unit>'
 	printf '\n'
 	printf '%s\n' 'Options:'
-	printf '\t%s\t\t%s\n' '<project>' 'name of project, use for export/import correct file in iCloud.'
-	printf '\t%s\t\t%s\n' '<platform>' 'type of operation to use (ios, and/android, bu).'
-	printf '\t%s\t\t%s\n' '<business-unit>' 'business unit to use to export/import'
+	printf '\t%s\t\t%s\n' '<project>' 'name of project, use for export correct file in iCloud.'
+	printf '\t%s\t\t%s\n' '<platform>' 'type of operation to use (ios, and/android).'
+	printf '\t%s\t\t%s\n' '<business-unit>' 'business unit to use to export'
 	printf '\n'
-	printf '\t%s\t\t%s\n' '-f,--file' 'file path use for import (supported "bu" platform only) (no default)'
-	printf '\t%s\t\t%s\n' '-j,--jira' 'jira reference number for import (supported "bu" platform only) (default: "-")'
 	printf '\t%s\t%s\n' '--dry-run,--no-dry-run' 'run command with no result (off by default)'
 	printf '\t%s\t%s\n' '--silent,--no-silent' 'run command with no print (off by default)'
 	printf '\t%s\t\t%s\n' '-v,--version' 'Prints version'
 	printf '\t%s\t\t%s\n' '-h,--help' 'Prints help'
 	printf ''
 	printf '\n%s\n' 'Platforms:'
-	printf '\t%s\t\t\t%s\n' 'bu' 'Convert localization Numbers to .xlsx file for translators'
 	printf '\t%s\t\t\t%s\n' 'ios' 'Convert localization Numbers to .strings files for iOS'
 	printf '\t%s\t\t%s\n' 'and/android' 'Convert localization Numbers to .xml files for Android'
 }
@@ -63,28 +60,6 @@ parse_commandline () {
 	do
 		_key="$1"
 		case "$_key" in
-			-f|--file)
-				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
-				_arg_import_path="$2"
-				shift
-				;;
-			--file=*)
-				_arg_import_path="${_key##--file=}"
-				;;
-			-f*)
-				_arg_import_path="${_key##-f}"
-				;;
-			-j|--jira)
-				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
-				_arg_jira="$2"
-				shift
-				;;
-			--jira=*)
-				_arg_jira="${_key##--jira=}"
-				;;
-			-j*)
-				_arg_jira="${_key##-j}"
-				;;
 			--no-dry-run|--dry-run)
 				_arg_dry_run="on"
 				test "${1:0:5}" = "--no-" && _arg_dry_run="off"
@@ -183,16 +158,16 @@ export_to_android() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 2 off $_arg_silent $_arg_dry_run
+    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 2 $_arg_silent $_arg_dry_run
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
 
-	# Change platform specific
-	python3 platform_extractor.py $output_path/merged.csv $output_path/merged_extracted.csv android
+	# Change platform specific and apply template
+	python3 platform_extractor.py $output_path/merged.csv $output_path/merged_extracted.csv android $_arg_silent $_arg_dry_run
 
     # Generate String Files
-    python3 localizer_caller.py $output_path $output_path/Android android
+    python3 localizer_caller.py $output_path $output_path/Android android $_arg_silent $_arg_dry_run
 }
 
 export_to_ios() {
@@ -202,42 +177,16 @@ export_to_ios() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1 off $_arg_silent $_arg_dry_run
+    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1 $_arg_silent $_arg_dry_run
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
 
-    # Change platform specific
-	python3 platform_extractor.py $output_path/merged.csv $output_path/merged_extracted.csv ios
+	# Change platform specific and apply template
+	python3 platform_extractor.py $output_path/merged.csv $output_path/template.info $output_path/merged_extracted.csv ios $_arg_silent $_arg_dry_run
 
     # Generate String Files
-    python3 localizer_caller.py $output_path $output_path/iOS ios
-}
-
-export_to_bu() {
-    reset_output
-    
-    # Convert number to csv
-    osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
-
-    # Select BU
-    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1,2 on $_arg_silent $_arg_dry_run
-
-    # Convert to Excel
-    business_unit_upper=$(echo $_arg_business_unit | tr a-z A-Z)
-    python3 csv_to_spreadsheet.py $output_path $output_path/$_arg_project-$business_unit_upper.xlsx $_arg_silent $_arg_dry_run
-}
-
-import_to_bu() {
-    import_csv_path=$output_path/ImportCSV
-	
-    reset_output
-
-    # Convert import number/spreadsheet to csv
-	python3 ./excel_to_csv.py "$_arg_import_path" "$import_csv_path"
-
-    # Update import csv to main excel
-    python3 importer.py "$icloud_path/$_arg_project.numbers" $import_csv_path $_arg_import_path $_arg_business_unit $_arg_jira 1,2 $_arg_silent $_arg_dry_run
+    python3 localizer_caller.py $output_path $output_path/iOS ios $_arg_silent $_arg_dry_run
 }
 
 self_update
@@ -289,14 +238,6 @@ case $_arg_platform in
     and | android)
         export_to_android
 		open $output_path/Android
-        ;;
-    bu)
-        if [ ! "$_arg_import_path" ]; then
-            export_to_bu
-			open $output_path
-        else
-            import_to_bu
-        fi
         ;;
     *)
         log "ERROR: unknown platform \"$_arg_platform\""

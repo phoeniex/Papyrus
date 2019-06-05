@@ -7,9 +7,8 @@ localized_path = sys.argv[1]
 info_path = sys.argv[2] + os.sep
 filtered_path = sys.argv[2] + os.sep + 'FilteredCSV' + os.sep
 key_colunn_indexes = list(map(int, sys.argv[4].split(',')))
-included_base = sys.argv[5] == 'on'.lower()
-silent = sys.argv[6] == 'on'.lower()
-dry_run = sys.argv[7] == 'on'.lower()
+silent = sys.argv[5].lower() == 'on'
+dry_run = sys.argv[6].lower() == 'on'
 
 if silent:
    sys.stdout = open(os.devnull, 'w')
@@ -22,14 +21,13 @@ if not os.path.exists(filtered_path):
 for file in files:
     localized = {}
     values = {}
+    is_template_file = '00 - Template' in file
+    filtered_file_path = info_path + 'template.info' if is_template_file else filtered_path + file
     with open(localized_path + file) as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         header = next(reader)
 
         for csv_key in header:
-            if included_base and csv_key == 'Base':
-                value_key  = 'base'
-                values[value_key] = header.index(csv_key)
             if bu in csv_key:
                 # Get language denotation from header title e.g. 'TH-EN' got 'en'
                 value_key  = 'value_' + csv_key.split('-')[-1].lower()
@@ -55,7 +53,7 @@ for file in files:
             for (value_key, value_index) in sorted(values.items()):
                 value = row[value_index]
                 # skip blank key if not setting as included
-                if included_base and len(value) == 0:
+                if len(value) == 0:
                     continue
 
                 localized_object[value_key] = value
@@ -67,7 +65,7 @@ for file in files:
     if len(localized) == 0:
         continue
 
-    with open(filtered_path + file, 'w') as csvfile:
+    with open(filtered_file_path, 'w') as csvfile:
         values_and_key = ['key']
         values_and_key.extend(values.keys())
 
@@ -80,3 +78,5 @@ for file in files:
 
     with open(info_path + 'lang.info', 'w') as info_file:
         info_file.write(','.join(values.keys()))
+
+    
