@@ -11,12 +11,8 @@ on run argv
 	set exportName to theExportFilePath as text
 	set aDoc to theFilePathAlias as text
 	tell application "Numbers"
-		open aDoc
-		delay 3 -- may need to adjust this higher
-		
-		tell front document
-			export to file exportName as CSV
-			close
-		end tell
+		set theDoc to open aDoc
+		export theDoc to file exportName as CSV
+		close theDoc
 	end tell
 end run
