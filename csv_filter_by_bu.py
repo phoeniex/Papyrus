@@ -52,9 +52,6 @@ for file in files:
             localized_object = {}
             for (value_key, value_index) in sorted(values.items()):
                 value = row[value_index]
-                # skip blank key if not setting as included
-                if len(value) == 0:
-                    continue
 
                 localized_object[value_key] = value
 
