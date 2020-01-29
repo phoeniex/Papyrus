@@ -164,7 +164,7 @@ export_to_android() {
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
 
 	# Change platform specific and apply template
-	python3 platform_extractor.py $output_path/merged.csv $output_path/merged_extracted.csv android $_arg_silent $_arg_dry_run
+	python3 platform_extractor.py $output_path/merged.csv $output_path/template.info $output_path/merged_extracted.csv android $_arg_silent $_arg_dry_run
 
     # Generate String Files
     python3 localizer_caller.py $output_path $output_path/Android android $_arg_silent $_arg_dry_run
