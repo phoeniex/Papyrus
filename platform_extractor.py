@@ -20,17 +20,23 @@ def extract_string(string, platform):
     
     return extracted_string
 
+def check_platform_localized(language, platform):
+    return True
+
 def convert_csv_to_dict(csv_path):
     values = {}
     header = []
     localizes = []
 
+    if not os.path.exists(csv_path):
+        return[], []
+        
     with open(csv_path) as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         header = next(reader)
 
         for csv_key in header:
-            if 'value_' in csv_key:
+            if 'value_' in csv_key and check_platform_localized(csv_key, platform):
                 values[csv_key] = header.index(csv_key)
 
         for row in reader:

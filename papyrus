@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.0.3"
+version='1.1.0'
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -143,9 +143,7 @@ self_update() {
 
 reset_output() {
     # Create main CSV directory if not exist
-    if [ ! -d $csv_path ]; then
-        mkdir -p $csv_path
-    fi
+	mkdir -p $output_path
 
     # Clear all output first
     rm -rf $output_path/*
@@ -231,11 +229,11 @@ if [ ! $result == 0 ]; then
 fi
 
 case $_arg_platform in 
-    ios)
+    ios | iOS)
         export_to_ios
 		open $output_path/iOS
         ;;
-    and | android)
+    and | android | Android)
         export_to_android
 		open $output_path/Android
         ;;

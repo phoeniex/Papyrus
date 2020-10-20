@@ -8,9 +8,9 @@ def main(args, loglevel):
   IN_PATH = args.input
   OUT_PATH = args.output
   LANG_KEYS = None  #static will change later
-  print '\n'
+  print('\n')
   logging.info("Start Localizing .... ")
-  print '\n'
+  print('\n')
   logging.info("------------------------------------")
   
   # check source path
@@ -56,9 +56,9 @@ def main(args, loglevel):
 
   logging.info("Generation output : %s" % OUTPUT_DIR)
   generate_keys(IN_PATH, OUTPUT_DIR, PLATFORM)
-  print '\n'
+  print('\n')
   logging.info("DONE LOCALIZING.")
-  print '\n'
+  print('\n')
 
 def generate_keys(source_path, output, platform):
   base_out_dir = output
