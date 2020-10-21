@@ -28,9 +28,9 @@ for file in files:
         header = next(reader)
 
         for csv_key in header:
-            bu_key, language_key = csv_key.split('/')
-            if bu in bu_key:
-                # Get language denotation from header title e.g. 'TH-EN-US' got 'en-US', 'TH-TH' got 'th'
+            if bu in csv_key:
+                # Get language denotation from header title e.g. 'TH/en-US' got 'en-US', 'TH/th' got 'th'
+                bu_key, language_key = csv_key.split('/')
                 value_key = 'value_{0}'.format(language_key)
                 values[value_key] = header.index(csv_key)
 
