@@ -13,6 +13,11 @@ dry_run = sys.argv[6].lower() == 'on'
 if silent:
    sys.stdout = open(os.devnull, 'w')
 
+for file in os.listdir(localized_path):
+    if os.path.isfile(os.path.join(localized_path, file)):
+        removed_table_name = file.replace('-Localizable','')
+        os.rename(os.path.join(localized_path, file), os.path.join(localized_path, removed_table_name))
+
 files = [file for file in os.listdir(localized_path) if os.path.isfile(os.path.join(localized_path, file))]
 
 if not os.path.exists(filtered_path):
@@ -40,7 +45,13 @@ for file in files:
 
         for row in reader:
             key = ""
-            for key_column_index in key_colunn_indexes:
+            
+            if is_template_file:
+                key_indexes = [1]
+            else:
+                key_indexes = key_colunn_indexes
+
+            for key_column_index in key_indexes:
                 if len(row[key_column_index]) > 0:
                     key = row[key_column_index]
                     break

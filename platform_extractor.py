@@ -17,8 +17,52 @@ def extract_string(string, platform):
         extracted_string = string.replace('&', '&amp;')
         extracted_string = extracted_string.replace("'", "\\'")
         extracted_string = extracted_string.replace('"', '\\"')
-    
+
+        extracted_string = replace_format_string('%s', extracted_string)
+        extracted_string = replace_format_string('%d', extracted_string)
+        extracted_string = replace_trimed_space(extracted_string)
+
     return extracted_string
+
+#replace '%s' -> '%1$s;'
+def replace_format_string(format, string):
+    if string.find(format) != -1:
+        splited_strings = string.split(format)
+        replaced_string = ''
+        for index, value in enumerate(splited_strings):
+            if index == 0:
+                replaced_string += splited_strings[index]
+            elif index > 0:
+                replaced_string += '%{}${}{}'.format(index, format[-1], splited_strings[index])
+
+        return replaced_string
+    else:
+        return string
+
+def replace_trimed_space(string):
+    replaced_string = ''
+
+    start_of_text_content = 0
+    for index, char in enumerate(string):
+        if not char.isspace():
+            start_of_text_content = index
+            break
+
+    if start_of_text_content > 0:
+        replaced_string = ('&#160;' * start_of_text_content) + string[start_of_text_content:]
+    else:
+        replaced_string = string
+
+    end_of_text_content = 0
+    for index, char in enumerate(replaced_string[::-1]):
+        if not char.isspace():
+            end_of_text_content = index
+            break
+
+    if end_of_text_content > 0:
+        replaced_string = replaced_string[: end_of_text_content * -1] + ('&#160;' * end_of_text_content)
+        
+    return replaced_string
 
 def check_platform_localized(language, platform):
     return True
