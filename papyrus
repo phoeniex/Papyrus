@@ -1,5 +1,5 @@
 #!/bin/bash
-version='1.2.0'
+version='1.3.0'
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -48,11 +48,12 @@ print_help () {
 	printf '\t%s\t%s\n' '--dry-run,--no-dry-run' 'run command with no result (off by default)'
 	printf '\t%s\t%s\n' '--silent,--no-silent' 'run command with no print (off by default)'
 	printf '\t%s\t\t%s\n' '-v,--version' 'Prints version'
+    printf '\t%s\t\t%s\n' '-u,--update' 'Update papyrus from version control'
 	printf '\t%s\t\t%s\n' '-h,--help' 'Prints help'
 	printf ''
 	printf '\n%s\n' 'Platforms:'
-	printf '\t%s\t\t\t%s\n' 'ios' 'Convert localization Numbers to .strings files for iOS'
-	printf '\t%s\t\t%s\n' 'and/android' 'Convert localization Numbers to .xml files for Android'
+	printf '\t%s\t\t\t%s\n' 'ios/iOS' 'Convert localization Numbers to .strings files for iOS'
+	printf '\t%s\t\t%s\n' 'and/android/Android' 'Convert localization Numbers to .xml files for Android'
 }
 
 parse_commandline () {
@@ -82,6 +83,10 @@ parse_commandline () {
 				;;
 			-h*)
 				print_help
+				exit 0
+				;;
+            -u|--update)
+				self_update
 				exit 0
 				;;
 			*)
@@ -187,7 +192,6 @@ export_to_ios() {
     python3 localizer_caller.py $output_path $output_path/iOS ios $_arg_silent $_arg_dry_run
 }
 
-self_update
 parse_commandline "$@"
 handle_passed_args_count
 assign_positional_args
