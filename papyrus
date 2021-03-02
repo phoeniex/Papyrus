@@ -1,23 +1,27 @@
 #!/bin/bash
-version='1.3.0'
+version='2.0.0'
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
 
 die() {
-	local _ret=$2
-	test -n "$_ret" || _ret=1
-	test "$_PRINT_HELP" = yes && print_help >&2
-	echo "$1" >&2
-	exit ${_ret}
+    local _ret=$2
+    test -n "$_ret" || _ret=1
+    test "$_PRINT_HELP" = yes && print_help >&2
+    echo "$1" >&2
+    exit ${_ret}
 }
 
 begins_with_short_option() {
     local first_option all_short_options
-	all_short_options='fjh'
-	first_option="${1:0:1}"
-	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+    all_short_options='fjh'
+    first_option="${1:0:1}"
+    test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
 }
+
+icloud_path=~/Library/Mobile\ Documents/com~apple~Numbers/Documents
+csv_path=$PWD/Output/MainCSV/
+output_path=$PWD/Output
 
 # THE DEFAULTS INITIALIZATION - POSITIONALS
 _positionals=()
@@ -26,90 +30,30 @@ _arg_import_path=
 _arg_jira="-"
 _arg_dry_run="off"
 _arg_silent="off"
+_arg_output=
 
 _script_path=$(perl -MCwd -e 'print Cwd::abs_path shift')
 _script_name="$0"
 _branch="master"
 _args=( "$@" )
 
-icloud_path=~/Library/Mobile\ Documents/com~apple~Numbers/Documents
-csv_path=$PWD/Output/MainCSV/
-output_path=$PWD/Output
-
 print_help () {
-	printf '%s\n' 'Usage:'
-	printf '\t%s %s\n' "$0" '[--(no-)dry-run] [--(no-)silent] [-v|--version] [-h|--help] <project> <platform> <business-unit>'
-	printf '\n'
-	printf '%s\n' 'Options:'
-	printf '\t%s\t\t%s\n' '<project>' 'name of project, use for export correct file in iCloud.'
-	printf '\t%s\t\t%s\n' '<platform>' 'type of operation to use (ios, and/android).'
-	printf '\t%s\t\t%s\n' '<business-unit>' 'business unit to use to export'
-	printf '\n'
-	printf '\t%s\t%s\n' '--dry-run,--no-dry-run' 'run command with no result (off by default)'
-	printf '\t%s\t%s\n' '--silent,--no-silent' 'run command with no print (off by default)'
-	printf '\t%s\t\t%s\n' '-v,--version' 'Prints version'
-    printf '\t%s\t\t%s\n' '-u,--update' 'Update papyrus from version control'
-	printf '\t%s\t\t%s\n' '-h,--help' 'Prints help'
-	printf ''
-	printf '\n%s\n' 'Platforms:'
-	printf '\t%s\t\t\t%s\n' 'ios/iOS' 'Convert localization Numbers to .strings files for iOS'
-	printf '\t%s\t\t%s\n' 'and/android/Android' 'Convert localization Numbers to .xml files for Android'
-}
 
-parse_commandline () {
-	while test $# -gt 0
-	do
-		_key="$1"
-		case "$_key" in
-			--no-dry-run|--dry-run)
-				_arg_dry_run="on"
-				test "${1:0:5}" = "--no-" && _arg_dry_run="off"
-				;;
-			--no-silent|--silent)
-				_arg_silent="on"
-				test "${1:0:5}" = "--no-" && _arg_silent="off"
-				;;
-			-v|--version)
-				echo $version
-				exit 0
-				;;
-			-v*)
-				echo $version
-				exit 0
-				;;
-			-h|--help)
-				print_help
-				exit 0
-				;;
-			-h*)
-				print_help
-				exit 0
-				;;
-            -u|--update)
-				self_update
-				exit 0
-				;;
-			*)
-				_positionals+=("$1")
-				;;
-		esac
-		shift
-	done
 }
 
 handle_passed_args_count () {
-	_required_args_string="'project', 'platform' and 'business-unit'"
-	test ${#_positionals[@]} -ge 3 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require exactly 3 (namely: $_required_args_string), but got only ${#_positionals[@]}." 1
-	test ${#_positionals[@]} -le 3 || _PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect exactly 3 (namely: $_required_args_string), but got ${#_positionals[@]} (the last one was: '${_positionals[*]: -1}')." 1
+    _required_args_string="'project', 'platform' and 'business-unit'"
+    test ${#_positionals[@]} -ge 3 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require exactly 3 (namely: $_required_args_string), but got only ${#_positionals[@]}." 1
+    test ${#_positionals[@]} -le 3 || _PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect exactly 3 (namely: $_required_args_string), but got ${#_positionals[@]} (the last one was: '${_positionals[*]: -1}')." 1
 }
 
 assign_positional_args () {
-	_positional_names=('_arg_project' '_arg_platform' '_arg_business_unit' )
+    _positional_names=('_arg_project' '_arg_platform' '_arg_business_unit' )
 
-	for (( ii = 0; ii < ${#_positionals[@]}; ii++))
-	do
-		eval "${_positional_names[ii]}=\${_positionals[ii]}" || die "Error during argument parsing, possibly an Argbash bug." 1
-	done
+    for (( ii = 0; ii < ${#_positionals[@]}; ii++))
+    do
+        eval "${_positional_names[ii]}=\${_positionals[ii]}" || die "Error during argument parsing, possibly an Argbash bug." 1
+    done
 }
 
 log() {
@@ -121,34 +65,34 @@ log() {
 self_update() {
     cd $_script_path
 
-	echo "Fetching repo..."
-	git fetch
+    echo "Fetching repo..."
+    git fetch
 
-	upstream=${1:-'origin/master'}
-	local=$(git rev-parse @{0})
-	remote=$(git rev-parse "$upstream")
-	base=$(git merge-base @{0} "$upstream")
+    upstream=${1:-'origin/master'}
+    local=$(git rev-parse @{0})
+    remote=$(git rev-parse "$upstream")
+    base=$(git merge-base @{0} "$upstream")
 
-	if test $local = $remote ; then
-    	:
-	elif test $local = $base ; then
-		echo "Found a new version, updating..."
-		git pull
+    if test $local = $remote ; then
+        :
+    elif test $local = $base ; then
+        echo "Found a new version, updating..."
+        git pull
         echo "Running the new version..."
         exec "$_script_name" "${_args[@]}"
 
         # Now exit this old instance
         exit 1
-	elif test $remote = $base ; then
-		:
-	else
-		:
-	fi
+    elif test $remote = $base ; then
+        :
+    else
+        :
+    fi
 }
 
 reset_output() {
     # Create main CSV directory if not exist
-	mkdir -p $output_path
+    mkdir -p $output_path
 
     # Clear all output first
     rm -rf $output_path/*
@@ -166,8 +110,8 @@ export_to_android() {
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
 
-	# Change platform specific and apply template
-	python3 platform_extractor.py $output_path/merged.csv $output_path/template.info $output_path/merged_extracted.csv android $_arg_silent $_arg_dry_run
+    # Change platform specific and apply template
+    python3 platform_extractor.py $output_path/merged.csv $output_path/template.info $output_path/merged_extracted.csv android $_arg_silent $_arg_dry_run
 
     # Generate String Files
     python3 localizer_caller.py $output_path $output_path/Android android $_arg_silent $_arg_dry_run
@@ -185,8 +129,8 @@ export_to_ios() {
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
 
-	# Change platform specific and apply template
-	python3 platform_extractor.py $output_path/merged.csv $output_path/template.info $output_path/merged_extracted.csv ios $_arg_silent $_arg_dry_run
+    # Change platform specific and apply template
+    python3 platform_extractor.py $output_path/merged.csv $output_path/template.info $output_path/merged_extracted.csv ios $_arg_silent $_arg_dry_run
 
     # Generate String Files
     python3 localizer_caller.py $output_path $output_path/iOS ios $_arg_silent $_arg_dry_run
@@ -218,8 +162,8 @@ if [ ! -e "$icloud_path/$_arg_project.numbers" ]; then
 fi
 
 if ! [ -x "$(command -v python3)" ]; then
-	log 'ERROR: python3 is not installed. please download Latest Python 3 Release here: https://www.python.org/downloads/mac-osx/'
-	exit 1
+    log 'ERROR: python3 is not installed. please download Latest Python 3 Release here: https://www.python.org/downloads/mac-osx/'
+    exit 1
 fi
 
 python3 -c "import sys, pkgutil; sys.exit(0 if pkgutil.find_loader('openpyxl') and pkgutil.find_loader('appscript') else 1)"
@@ -227,19 +171,31 @@ result=$?
 
 if [ ! $result == 0 ]; then
     log 'ERROR: required libraries in python 3 not found in pip please install those libraries first. To install type'
-	log '> "python3 -m pip install openpyxl" and/or'
-	log '> "python3 -m pip install appscript"'
+    log '> "python3 -m pip install openpyxl" and/or'
+    log '> "python3 -m pip install appscript"'
     exit 1
 fi
 
 case $_arg_platform in 
     ios | iOS)
         export_to_ios
-		open $output_path/iOS
+        if [ -z "$_arg_output" ]
+        then
+            open $output_path/iOS
+        else
+            cp -r $output_path/iOS/* $_arg_output
+            log "Papyrus successfully exported."
+        fi
         ;;
     and | android | Android)
         export_to_android
-		open $output_path/Android
+        if [ -z "$_arg_output" ]
+        then
+            open $output_path/Android
+        else
+            cp -r $output_path/Android/* $_arg_output
+            log "Papyrus successfully exported."
+        fi
         ;;
     *)
         log "ERROR: unknown platform \"$_arg_platform\""

@@ -44,7 +44,8 @@ for file in files:
             continue
 
         for row in reader:
-            key = ""
+            key = ''
+            screen_name_index = 0
             
             if is_template_file:
                 key_indexes = [1]
@@ -60,7 +61,18 @@ for file in files:
             if len(key) == 0:
                 continue
 
-            localized_key = key
+            # Prefix screen and module name
+            # module name remove prefix and postfix and convert to snake case (e.g. '02 - News.csv')
+            module_name = file.split(' - ')[-1].lower().replace(' ', '_').replace('.csv', '')
+
+            # Screen name convert to snake case
+            screen_name = row[screen_name_index].lower().replace(' ', '_')
+
+            if is_template_file:
+                localized_key = key
+            else:
+                localized_key = '_'.join(list(filter(None, [module_name, screen_name, key])))
+                
             localized_object = {}
             for (value_key, value_index) in sorted(values.items()):
                 value = row[value_index]
