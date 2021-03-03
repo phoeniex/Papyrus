@@ -9,6 +9,7 @@ filtered_path = sys.argv[2] + os.sep + 'FilteredCSV' + os.sep
 key_colunn_indexes = list(map(int, sys.argv[4].split(',')))
 silent = sys.argv[5].lower() == 'on'
 dry_run = sys.argv[6].lower() == 'on'
+no_prefix = sys.argv[7].lower() == 'on'
 
 if silent:
    sys.stdout = open(os.devnull, 'w')
@@ -62,15 +63,14 @@ for file in files:
                 continue
 
             # Prefix screen and module name
-            # module name remove prefix and postfix and convert to snake case (e.g. '02 - News.csv')
-            module_name = file.split(' - ')[-1].lower().replace(' ', '_').replace('.csv', '')
-
-            # Screen name convert to snake case
-            screen_name = row[screen_name_index].lower().replace(' ', '_')
-
-            if is_template_file:
+            if is_template_file or no_prefix:
                 localized_key = key
             else:
+                 # module name remove prefix and postfix and convert to snake case (e.g. '02 - News.csv')
+                module_name = file.split(' - ')[-1].lower().replace(' ', '_').replace('.csv', '')
+
+                # Screen name convert to snake case
+                screen_name = row[screen_name_index].lower().replace(' ', '_')
                 localized_key = '_'.join(list(filter(None, [module_name, screen_name, key])))
                 
             localized_object = {}

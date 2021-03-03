@@ -1,5 +1,5 @@
 #!/bin/bash
-version='2.0.0'
+version='2.1.0'
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -30,6 +30,7 @@ _arg_import_path=
 _arg_jira="-"
 _arg_dry_run="off"
 _arg_silent="off"
+_arg_no_prefix="off"
 _arg_output=
 
 _script_path=$(perl -MCwd -e 'print Cwd::abs_path shift')
@@ -38,7 +39,80 @@ _branch="master"
 _args=( "$@" )
 
 print_help () {
+    printf '%s\n' 'Usage:'
+	printf '\t%s %s\n' "$0" '[--(no-)dry-run] [--(no-)silent] [-v|--version] [-h|--help] <project> <platform> <business-unit>'
+	printf '\n'
+	printf '%s\n' 'Options:'
+	printf '\t%s\t\t%s\n' '<project>' 'name of project, use for export correct file in iCloud.'
+	printf '\t%s\t\t%s\n' '<platform>' 'type of operation to use (ios, and/android).'
+	printf '\t%s\t\t%s\n' '<business-unit>' 'business unit to use to export'
+	printf '\n'
+	printf '\t%s\t%s\n' '--dry-run,--no-dry-run' 'run command with no result (off by default)'
+	printf '\t%s\t%s\n' '--silent,--no-silent' 'run command with no print (off by default)'
+    printf '\t%s\t%s\n' '--no-prefix' 'use only key value not prefix with screen name column and module name (off by default)'
+	printf '\t%s\t\t%s\n' '-o,--output' 'custom output path'
+    printf '\t%s\t\t%s\n' '-v,--version' 'prints version'
+    printf '\t%s\t\t%s\n' '-u,--update' 'update papyrus from version control'
+	printf '\t%s\t\t%s\n' '-h,--help' 'prints help'
+	printf ''
+	printf '\n%s\n' 'Platforms:'
+	printf '\t%s\t\t\t%s\n' 'ios/iOS' 'convert localization Numbers to .strings files for iOS'
+	printf '\t%s\t\t%s\n' 'and/android/Android' 'convert localization Numbers to .xml files for Android'
+}
 
+parse_commandline () {
+	while test $# -gt 0
+	do
+		_key="$1"
+		case "$_key" in
+			--no-dry-run|--dry-run)
+				_arg_dry_run="on"
+				test "${1:0:5}" = "--no-" && _arg_dry_run="off"
+				;;
+			--no-silent|--silent)
+				_arg_silent="on"
+				test "${1:0:5}" = "--no-" && _arg_silent="off"
+				;;
+            --no-prefix)
+				_arg_no_prefix="on"
+				;;
+			-v|--version)
+				echo $version
+				exit 0
+				;;
+			-v*)
+				echo $version
+				exit 0
+				;;
+			-h|--help)
+				print_help
+				exit 0
+				;;
+			-h*)
+				print_help
+				exit 0
+				;;
+            -o|--output)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_output="$2"
+				shift
+				;;
+			--output=*)
+				_arg_output="${_key##--output=}"
+				;;
+			-o*)
+				_arg_output="${_key##-o}"
+				;;
+            -u|--update)
+				self_update
+				exit 0
+				;;
+			*)
+				_positionals+=("$1")
+				;;
+		esac
+		shift
+	done
 }
 
 handle_passed_args_count () {
@@ -105,7 +179,7 @@ export_to_android() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 2 $_arg_silent $_arg_dry_run
+    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 2 $_arg_silent $_arg_dry_run $_arg_no_prefix
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
@@ -124,7 +198,7 @@ export_to_ios() {
     osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
 
     # Select BU
-    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1 $_arg_silent $_arg_dry_run
+    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1 $_arg_silent $_arg_dry_run $_arg_no_prefix
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
