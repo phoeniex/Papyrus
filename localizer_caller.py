@@ -4,17 +4,17 @@ import os
 import csv
 
 def call_localizer():
-    command = './csv-localizer -p ' + platform_string + ' -i ' + csv_path + ' -o ' + output_path
+    platform_string = 'json' if platform == 'flutter' else platform
+    command = './csv-localizer -p ' + platform_string + ' -i ' + os.path.dirname(csv_path) + ' -o ' + output_path
     subprocess.call(command, shell=True)
 
 csv_original_path = sys.argv[1] + os.sep + 'merged_extracted.csv'
-csv_path = sys.argv[1] + os.sep + 'merged_removed.csv'
+csv_path = sys.argv[1] + os.sep + 'CSV' + os.sep + 'merged_removed.csv'
 info_path = sys.argv[1] + os.sep + 'lang.info'
 output_path = sys.argv[2]
 platform = sys.argv[3].lower()
 silent = sys.argv[4].lower() == 'on'
 dry_run = sys.argv[5].lower() == 'on'
-platform_string = 'ios' if platform == 'ios' else 'android'
 
 if silent:
    sys.stdout = open(os.devnull, 'w')
@@ -35,6 +35,7 @@ with open(csv_original_path) as csvfile:
         if row[0] != 'key' and row not in localized:
             localized.append(row)
 
+os.makedirs(os.path.dirname(csv_path), exist_ok=True)
 with open(csv_path, 'w') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(header)

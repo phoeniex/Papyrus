@@ -1,5 +1,5 @@
 #!/bin/bash
-version='2.1.0'
+version='3.0.0'
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -58,6 +58,7 @@ print_help () {
 	printf '\n%s\n' 'Platforms:'
 	printf '\t%s\t\t\t%s\n' 'ios/iOS' 'convert localization Numbers to .strings files for iOS'
 	printf '\t%s\t\t%s\n' 'and/android/Android' 'convert localization Numbers to .xml files for Android'
+    printf '\t%s\t\t%s\n' 'flutter/Flutter' 'convert localization Numbers to .arb files for Flutter'
 }
 
 parse_commandline () {
@@ -210,6 +211,25 @@ export_to_ios() {
     python3 localizer_caller.py $output_path $output_path/iOS ios $_arg_silent $_arg_dry_run
 }
 
+export_to_flutter() {
+    reset_output
+
+    # Convert number to csv
+    osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
+
+    # Select BU
+    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1 $_arg_silent $_arg_dry_run $_arg_no_prefix
+
+    # Combine CSV
+    cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
+
+    # Change platform specific and apply template
+    python3 platform_extractor.py $output_path/merged.csv $output_path/template.info $output_path/merged_extracted.csv flutter $_arg_silent $_arg_dry_run
+
+    # Generate String Files
+    python3 localizer_caller.py $output_path $output_path/Flutter flutter $_arg_silent $_arg_dry_run
+}
+
 parse_commandline "$@"
 handle_passed_args_count
 assign_positional_args
@@ -268,6 +288,16 @@ case $_arg_platform in
             open $output_path/Android
         else
             cp -r $output_path/Android/* $_arg_output
+            log "Papyrus successfully exported."
+        fi
+        ;;
+    flutter | Flutter )
+        export_to_flutter
+        if [ -z "$_arg_output" ]
+        then
+            open $output_path/Flutter
+        else
+            cp -r $output_path/Flutter/* $_arg_output
             log "Papyrus successfully exported."
         fi
         ;;
