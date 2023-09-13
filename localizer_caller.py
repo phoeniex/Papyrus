@@ -5,7 +5,7 @@ import csv
 
 def call_localizer():
     platform_string = 'json' if platform == 'flutter' else platform
-    command = './csv-localizer -p ' + platform_string + ' -i ' + os.path.dirname(csv_path) + ' -o ' + output_path
+    command = 'python3 ./csv-localizer -p ' + platform_string + ' -i ' + os.path.dirname(csv_path) + ' -o ' + output_path
     subprocess.call(command, shell=True)
 
 csv_original_path = sys.argv[1] + os.sep + 'merged_extracted.csv'

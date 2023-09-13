@@ -4,23 +4,18 @@ import os
 import csv
 
 def extract_string(string, platform):
-    # ignore code "<CODE>" syntax
-    if string[:6].upper == '<CODE>':
-        return string[6:]
-
     extracted_string = string
     if platform == 'ios':
         extracted_string = string.replace('%s', '%@')
-        extracted_string = extracted_string.replace('$s', '$@')
         extracted_string = extracted_string.replace('"', '\\"')
+        extracted_string = extracted_string.replace('<HTML>', '')
+        extracted_string = extracted_string.replace('</HTML>', '')
     elif platform == 'android':
         extracted_string = string.replace('&', '&amp;')
         extracted_string = extracted_string.replace("'", "\\'")
         extracted_string = extracted_string.replace('"', '\\"')
-
-        extracted_string = replace_format_string('%s', extracted_string)
-        extracted_string = replace_format_string('%d', extracted_string)
-        extracted_string = replace_trimed_space(extracted_string)
+        extracted_string = extracted_string.replace('<HTML>', '<![CDATA[')
+        extracted_string = extracted_string.replace('</HTML>', ']]>')
 
     return extracted_string
 

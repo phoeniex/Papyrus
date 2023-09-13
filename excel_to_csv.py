@@ -12,7 +12,7 @@ if not os.path.exists(csv_path):
 
 workbook = openpyxl.load_workbook(excel_path)
 for sheet in workbook.worksheets:
-    filename = sheet.title + '-Table 1.csv'
+    filename = sheet.title + '.csv'
     with open(csv_path + filename, 'w', newline="") as csvfile:
         writer = csv.writer(csvfile)
         for row in sheet.rows:

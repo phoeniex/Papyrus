@@ -19,7 +19,6 @@ begins_with_short_option() {
     test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
 }
 
-icloud_path=~/Library/Mobile\ Documents/com~apple~Numbers/Documents
 csv_path=$PWD/Output/MainCSV/
 output_path=$PWD/Output
 
@@ -43,9 +42,8 @@ print_help () {
 	printf '\t%s %s\n' "$0" '[--(no-)dry-run] [--(no-)silent] [-v|--version] [-h|--help] <project> <platform> <business-unit>'
 	printf '\n'
 	printf '%s\n' 'Options:'
-	printf '\t%s\t\t%s\n' '<project>' 'name of project, use for export correct file in iCloud.'
+	printf '\t%s\t\t%s\n' '<input-path>' 'path of the excel or numbers file.'
 	printf '\t%s\t\t%s\n' '<platform>' 'type of operation to use (ios, and/android).'
-	printf '\t%s\t\t%s\n' '<business-unit>' 'business unit to use to export'
 	printf '\n'
 	printf '\t%s\t%s\n' '--dry-run,--no-dry-run' 'run command with no result (off by default)'
 	printf '\t%s\t%s\n' '--silent,--no-silent' 'run command with no print (off by default)'
@@ -117,13 +115,13 @@ parse_commandline () {
 }
 
 handle_passed_args_count () {
-    _required_args_string="'project', 'platform' and 'business-unit'"
-    test ${#_positionals[@]} -ge 3 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require exactly 3 (namely: $_required_args_string), but got only ${#_positionals[@]}." 1
-    test ${#_positionals[@]} -le 3 || _PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect exactly 3 (namely: $_required_args_string), but got ${#_positionals[@]} (the last one was: '${_positionals[*]: -1}')." 1
+    _required_args_string="'input_path' and 'platform'"
+    test ${#_positionals[@]} -ge 2 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require exactly 3 (namely: $_required_args_string), but got only ${#_positionals[@]}." 1
+    test ${#_positionals[@]} -le 2 || _PRINT_HELP=yes die "FATAL ERROR: There were spurious positional arguments --- we expect exactly 3 (namely: $_required_args_string), but got ${#_positionals[@]} (the last one was: '${_positionals[*]: -1}')." 1
 }
 
 assign_positional_args () {
-    _positional_names=('_arg_project' '_arg_platform' '_arg_business_unit' )
+    _positional_names=('_arg_input_path' '_arg_platform' )
 
     for (( ii = 0; ii < ${#_positionals[@]}; ii++))
     do
@@ -173,14 +171,19 @@ reset_output() {
     rm -rf $output_path/*
 }
 
-export_to_android() {
-    reset_output
+convert_excel() {
+    # Convert excel to csv
+    python3 excel_to_csv.py "$_arg_input_path" "$csv_path"
+}
 
+convert_numbers() {
     # Convert number to csv
-    osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
+    osascript ./spreadsheet_to_csv.scpt "$_arg_input_path" "$csv_path"
+}
 
-    # Select BU
-    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 2 $_arg_silent $_arg_dry_run $_arg_no_prefix
+export_to_android() {
+    # Prepare Localized Data
+    python3 csv_filter.py "$csv_path" "$output_path" $_arg_silent $_arg_dry_run $_arg_no_prefix
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
@@ -193,13 +196,8 @@ export_to_android() {
 }
 
 export_to_ios() {
-    reset_output
-    
-    # Convert number to csv
-    osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
-
-    # Select BU
-    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1 $_arg_silent $_arg_dry_run $_arg_no_prefix
+    # Prepare Localized Data
+    python3 csv_filter.py "$csv_path" "$output_path" $_arg_silent $_arg_dry_run $_arg_no_prefix
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
@@ -212,13 +210,8 @@ export_to_ios() {
 }
 
 export_to_flutter() {
-    reset_output
-
-    # Convert number to csv
-    osascript ./spreadsheet_to_csv.scpt "$icloud_path/$_arg_project.numbers" "$csv_path"
-
-    # Select BU
-    python3 csv_filter_by_bu.py $csv_path $output_path $_arg_business_unit 1 $_arg_silent $_arg_dry_run $_arg_no_prefix
+    # Prepare Localized Data
+    python3 csv_filter.py "$csv_path" "$output_path" $_arg_silent $_arg_dry_run $_arg_no_prefix
 
     # Combine CSV
     cat $output_path/FilteredCSV/*.csv > $output_path/merged.csv
@@ -239,19 +232,14 @@ if [ ! "$_arg_platform" ]; then
     exit 1
 fi 
 
-if [ ! "$_arg_project" ]; then
-    log 'ERROR: cannot perform command "project" required."'
-    exit 1
-fi 
-
-if [ ! "$_arg_business_unit" ]; then
-    log 'ERROR: cannot perform command "business-unit" required."'
+if [ ! "$_arg_input_path" ]; then
+    log 'ERROR: cannot perform command "input-path" required."'
     exit 1
 fi 
 
 # Check iCloud Numbers file exists.
-if [ ! -e "$icloud_path/$_arg_project.numbers" ]; then
-    log 'ERROR: cannot find "'$_arg_project.numbers'" in your local iCloud.'
+if [ ! -e "$_arg_input_path" ]; then
+    log 'ERROR: cannot find "'$_arg_input_path'" in your local storage.'
     exit 1 
 fi
 
@@ -269,6 +257,24 @@ if [ ! $result == 0 ]; then
     log '> "python3 -m pip install appscript"'
     exit 1
 fi
+
+reset_output
+
+input_filename=$(basename -- "$_arg_input_path")
+input_extension="${input_filename##*.}"
+
+case $input_extension in
+    xls | xlsx | XLS | XLSX)
+        convert_excel
+        ;;
+    numbers)
+        convert_numbers
+        ;;
+    *)
+        log "ERROR: unknown file format \"$_arg_input_path\""
+        exit 1
+        ;;
+esac
 
 case $_arg_platform in 
     ios | iOS)
