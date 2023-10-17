@@ -156,7 +156,7 @@ def start_localize_ios(source_path, all_writes, lang_keys, delimiter):
           if any([value == "" for value in row_values]):
             [fwrite.write('\n') for idx, fwrite in enumerate(allwrites)]
           else:
-            [fwrite.write('"{key}" = "{lang}";\n'.format(key=row_key, lang=row_values[idx]))
+            [fwrite.write('{key} = "{lang}";\n'.format(key=row_key, lang=row_values[idx]))
              for idx, fwrite in enumerate(allwrites)]
   [fwrite.close() for fwrite in allwrites]
 
@@ -220,7 +220,7 @@ def start_localize_json(source_path, all_writes, lang_keys, delimiter):
 
       current_row = 0
 
-      with open(fullpath, 'rb') as csvfile:
+      with open(fullpath, 'r') as csvfile:
         [fwrite.write('\n') for fwrite in allwrites]
 
         reader = csv.reader(csvfile, delimiter=delimiter)
