@@ -115,18 +115,14 @@ for file_name in localized_file_names:
             localized_key = ''
             if is_template_file:
                 localized_key = row[template_index]
-            else:
+            
+            # check and ignore some statuses and elements
+            elif (row[element_index] not in ignored_elements) and (row[status_index] not in ignored_statuses):  
                 module = to_snake_case(file_name.split(' - ')[-1].replace('.csv', ''))
                 screen = to_snake_case(row[screen_index])
                 element = to_snake_case(elements[row[element_index]])
                 description = to_snake_case(row[description_index])
                 localized_key = '_'.join(list(filter(None, [module, screen, element, description])))
-                
-                # check ignore element before calculate key            
-                localized_key = '' if row[element_index] in ignored_elements else localized_key
-
-                # check and ignore some statuses
-                localized_key = '' if row[status_index] in ignored_statuses else localized_key
 
             # skip empty key
             if len(localized_key) == 0:

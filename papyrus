@@ -1,5 +1,5 @@
 #!/bin/bash
-version='4.0.1'
+version='4.0.2'
 # Argbash is a bash code generator used to get arguments parsing right.
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
@@ -165,10 +165,10 @@ self_update() {
 
 reset_output() {
     # Create main CSV directory if not exist
-    mkdir -p $output_path
+    mkdir -p "$output_path"
 
     # Clear all output first
-    rm -rf $output_path/*
+    rm -rf "$output_path/"*
 }
 
 convert_excel() {
